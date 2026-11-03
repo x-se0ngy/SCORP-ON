@@ -1,0 +1,1587 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>SCORP-ON 프로토타입 v2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@300;400;500;600&family=Roboto:wght@500&display=swap">
+<style>
+/* Layout: one 393×852 phone frame centered on a black stage, scaled to fit the window. */
+:root {
+  --stage: #000000;
+  --frame-top: #2F0606;
+  --frame-bottom: #000000;
+  --ink: #B5A4A4;
+  --ink-hi: #DEC3C6;
+  --card: #280606;
+  --font-ui: "Pretendard", "Inter", "Noto Sans KR", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--stage);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  box-sizing: border-box;
+  -webkit-user-select: none; user-select: none;
+}
+#wrap { height: 100%; display: flex; align-items: center; justify-content: center; }
+#holder { position: relative; flex: none; }
+#stage {
+  position: absolute; left: 0; top: 0;
+  filter: brightness(.8);
+  width: 393px; height: 852px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: var(--stage);
+}
+.screen {
+  position: absolute; inset: 0;
+  display: none;
+  background: linear-gradient(180deg, var(--frame-top), var(--frame-bottom));
+}
+.screen.on { display: block; }
+.screen > img.base, .fc img { position: absolute; display: block; max-width: none; pointer-events: none; }
+.patch { position: absolute; overflow: hidden; pointer-events: none; }
+.fc { position: absolute; width: 393px; height: 852px; }
+.grad { position: absolute; inset: 0; background: linear-gradient(180deg, var(--frame-top), var(--frame-bottom)); }
+.hs {
+  position: absolute; display: block; padding: 0; margin: 0;
+  border: 0; background: transparent; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; z-index: 20;
+}
+.hs:focus { outline: none; }
+.hs:focus-visible { outline: 1px dashed rgba(181,164,164,.6); outline-offset: 2px; }
+.fade { position: absolute; transition-property: opacity; }
+
+/* radar + loading */
+.spin { position: absolute; max-width: none; }
+.radar-sweep { transform-origin: 182.689px 177.554px; animation: sweep 1.72s linear infinite; }
+@keyframes sweep { to { transform: rotate(-360deg); } }
+
+/* scroll screens */
+.scroller {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: none; overscroll-behavior: contain; cursor: grab;
+}
+.scroller::-webkit-scrollbar { display: none; }
+.scroller.drag { cursor: grabbing; }
+.scroller .inner { position: relative; width: 393px; }
+.fixed { position: absolute; left: 0; pointer-events: none; z-index: 5; max-width: none; }
+
+/* settings card rebuilt for the part below the fold */
+.card {
+  position: absolute; left: 20px; width: 353px; height: 60px;
+  background: var(--card); border-radius: 4px;
+}
+.card .t {
+  position: absolute; left: 16.5px; top: 20.1px;
+  font: 600 16px/19.5px var(--font-ui); color: var(--ink-hi); white-space: nowrap;
+}
+.tg {
+  position: absolute; width: 64px; height: 28px; border-radius: 14px;
+  background: var(--ink); cursor: pointer; padding: 0; border: 0;
+}
+.tg i { position: absolute; top: 2px; width: 39px; height: 24px; border-radius: 12px; }
+.tg:focus { outline: none; }
+.tg:focus-visible { outline: 1px dashed rgba(181,164,164,.6); outline-offset: 2px; }
+.ncard { position: absolute; left: 20px; width: 353px; height: 59.9px; background: var(--card); border-radius: 4px; }
+.ncard .h { position: absolute; left: 44.5px; top: 8px; font: 600 16px/24px var(--font-ui); color: var(--ink); }
+.ncard .d { position: absolute; left: 267.5px; top: 9.5px; width: 69px; text-align: right; font: 300 14px/21px var(--font-ui); color: var(--ink); }
+.ncard .b { position: absolute; left: 16.5px; top: 32px; font: 300 14px/19.6px var(--font-ui); color: var(--ink); white-space: nowrap; }
+.ncard svg { position: absolute; }
+.ncard .d { left: auto; right: 16.5px; width: auto; }
+.card .sub { position: absolute; left: 16.5px; top: 35.11px; font: 300 12px/14px var(--font-ui); letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; }
+.card.two .t { top: 11.11px; }
+.card svg { position: absolute; left: 0; top: 0; }
+.sec { position: absolute; left: 20px; font: 500 24px/24px "Roboto", "Inter", system-ui, sans-serif; letter-spacing: 0.15px; color: var(--ink); }
+.homebar { position: absolute; left: 122.67px; top: 835px; width: 147.67px; height: 5px; border-radius: 3px; background: #504343; z-index: 6; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep { animation-duration: 6s; }
+}
+</style>
+
+<style>
+/* v2 · live screens for 신고 / 알림 / 달력 / 레코드, built on the same tokens as the image screens */
+:root {
+  --x-ink: #B5A4A4;
+  --x-ink-hi: #DEC3C6;
+  --x-dim: rgba(181,164,164,.58);
+  --x-faint: rgba(181,164,164,.32);
+  --x-line: rgba(181,164,164,.2);
+  --x-card: #280606;
+  --x-card-hi: #351010;
+  --x-sheet: #1C0404;
+  --x-btn: #C7B6B6;
+  --x-btn-ink: #3A1515;
+  --x-sos: #E5574B;
+  --x-ok: #59C98A;
+  --x-num: "Inter", "Noto Sans KR", system-ui, sans-serif;
+  --x-title: "Space Grotesk", "Inter", "Noto Sans KR", system-ui, sans-serif;
+}
+.x { position: absolute; }
+.x-sb { position: absolute; left: 0; top: 0; width: 393px; height: 54px; z-index: 8; pointer-events: none; }
+.x-sb span { position: absolute; left: 51px; top: 17px; font: 600 17px/22px var(--x-num); color: #EFE6E6; letter-spacing: -.01em; }
+.x-sb svg { position: absolute; right: 26px; top: 22px; }
+.x-hd { position: absolute; left: 0; top: 54px; width: 393px; height: 62px; z-index: 8; }
+.x-title { position: absolute; left: 70px; right: 70px; top: 18px; text-align: center; font: 700 20px/26px var(--x-title); color: #CDBDBD; letter-spacing: -.01em; }
+.x-title.eb { font: 600 12px/26px var(--x-num); letter-spacing: .22em; color: var(--x-dim); }
+.x-ib { position: absolute; width: 40px; height: 40px; padding: 0; border: 0; background: transparent; color: var(--x-ink); cursor: pointer; display: grid; place-items: center; border-radius: 20px; -webkit-tap-highlight-color: transparent; }
+.x-ib:active { background: rgba(181,164,164,.1); }
+.x-back { left: 20px; top: 11px; }
+.x-more { right: 20px; top: 11px; }
+button:focus { outline: none; }
+button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset: 2px; }
+
+/* buttons */
+.x-btn, .x-btn-ghost { position: absolute; border-radius: 4px; cursor: pointer; font: 500 22px/1 var(--x-num); -webkit-tap-highlight-color: transparent; transition: transform .12s ease, background .2s ease; }
+.x-btn { background: var(--x-btn); color: var(--x-btn-ink); border: 0; font-family: var(--x-title); font-weight: 700; }
+.x-btn-ghost { background: rgba(40,6,6,.6); color: var(--x-ink-hi); border: 1px solid var(--x-faint); font-size: 15px; font-family: "Noto Sans KR", var(--x-num); font-weight: 500; }
+.x-btn:active, .x-btn-ghost:active { transform: scale(.97); }
+.x-btn-ghost.lg { font: 500 20px/1 "Noto Sans KR", var(--x-num); }
+.x-cap { position: absolute; left: 0; width: 393px; text-align: center; font: 400 13px/20px "Noto Sans KR", sans-serif; color: var(--x-ink); }
+
+/* emergency dial */
+.x-dial { position: absolute; overflow: visible; }
+.x-dial .ring { transition: none; }
+.x-rot { transform-box: view-box; transform-origin: 142.5px 142.4px; animation: x-spin 1.15s linear infinite; }
+@keyframes x-spin { to { transform: rotate(360deg); } }
+.x-pulse { position: absolute; width: 286px; height: 286px; pointer-events: none; }
+.x-pulse i { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(222,195,198,.35); animation: x-pulse 2s cubic-bezier(.22,.8,.3,1) infinite; opacity: 0; }
+.x-pulse i:nth-child(2) { animation-delay: 1s; }
+.x-pulse.slow i { animation-duration: 3.4s; border-color: rgba(222,195,198,.22); }
+.x-pulse.slow i:nth-child(2) { animation-delay: 1.7s; }
+@keyframes x-pulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.32); opacity: 0; } }
+.x-cdnum { position: absolute; left: 54.3px; top: 172.2px; width: 286px; height: 286px; display: grid; place-items: center; font: 300 124px/1 var(--x-num); letter-spacing: -.05em; color: var(--x-ink); font-variant-numeric: tabular-nums; pointer-events: none; }
+.x-cdnum.tick { animation: x-tick .45s cubic-bezier(.22,.8,.3,1); }
+@keyframes x-tick { from { opacity: .25; transform: scale(.9); } to { opacity: 1; transform: none; } }
+.x-glyph { position: absolute; left: 171.7px; top: 285.6px; width: 51.3px; height: 59.3px; max-width: none; pointer-events: none; }
+.x-glyph.breathe { animation: x-breathe 1.6s ease-in-out infinite; }
+@keyframes x-breathe { 50% { opacity: .45; } }
+.x-msg { position: absolute; left: 0; width: 393px; text-align: center; font: 500 16px/22px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-msg b { font: 600 16px/22px var(--x-num); font-variant-numeric: tabular-nums; color: #F0E2E3; }
+.x-sub { position: absolute; left: 0; width: 393px; text-align: center; font: 400 12px/18px "Noto Sans KR", sans-serif; color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-rcpt { position: absolute; left: 0; width: 393px; display: flex; justify-content: center; gap: 8px; }
+.x-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px; border-radius: 15px; background: var(--x-card); border: 1px solid var(--x-line); font: 500 13px/1 "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-pill svg { flex: none; }
+
+/* sending steps */
+.x-steps { position: absolute; left: 62px; width: 269px; margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.x-steps li { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; height: 30px; font: 400 14px/1 "Noto Sans KR", sans-serif; color: var(--x-faint); transition: color .25s ease; }
+.x-steps li.active, .x-steps li.done { color: var(--x-ink-hi); }
+.x-steps li .r { font: 500 12px/1 var(--x-num); font-variant-numeric: tabular-nums; color: var(--x-dim); }
+.x-steps li.done .r { color: var(--x-ink); }
+.x-steps .ic { width: 14px; height: 14px; border-radius: 50%; border: 1.3px solid var(--x-faint); box-sizing: border-box; position: relative; }
+.x-steps li.active .ic { border-color: rgba(222,195,198,.25); border-top-color: var(--x-ink-hi); animation: x-spin .7s linear infinite; }
+.x-steps li.done .ic { border: 0; background: var(--x-ink); }
+.x-steps li.done .ic::after { content: ""; position: absolute; left: 4.6px; top: 2.6px; width: 3.4px; height: 6.4px; border: solid #2A0808; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+.x-prog { position: absolute; left: 84px; width: 247px; height: 2px; border-radius: 1px; background: var(--x-line); overflow: hidden; }
+.x-prog i { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: var(--x-ink-hi); }
+
+/* incident card */
+.x-icard { position: absolute; left: 20px; width: 353px; background: var(--x-card); border: 1px solid var(--x-line); border-radius: 4px; box-sizing: border-box; }
+.x-irow { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 16px; font: 400 14px/1 "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-irow + .x-irow { border-top: 1px solid var(--x-line); }
+.x-irow .st { display: inline-flex; align-items: center; gap: 6px; font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-ink); font-variant-numeric: tabular-nums; }
+.x-irow .st.ok { color: var(--x-ok); }
+.x-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--x-sos); animation: x-blink 1.2s steps(1) infinite; }
+@keyframes x-blink { 50% { opacity: .2; } }
+.x-call { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.x-hold { overflow: hidden; }
+.x-hold .fill { position: absolute; inset: 0; background: #E9DCDC; transform-origin: 0 50%; transform: scaleX(0); }
+.x-hold span { position: relative; font: 500 16px/1 "Noto Sans KR", sans-serif; }
+
+/* overlay: sheet + toast */
+.x-ov { position: absolute; inset: 0; z-index: 60; }
+.x-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.55); opacity: 0; transition: opacity .25s ease; }
+.x-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 640px; overflow: auto; background: var(--x-sheet); border-top: 1px solid var(--x-line); border-radius: 16px 16px 0 0; padding: 10px 20px 34px; box-sizing: border-box; transform: translateY(100%); transition: transform .3s cubic-bezier(.22,.8,.3,1); scrollbar-width: none; }
+.x-ov.on .x-scrim { opacity: 1; }
+.x-ov.on .x-sheet { transform: none; }
+.x-grab { width: 36px; height: 4px; border-radius: 2px; background: var(--x-faint); margin: 0 auto 16px; }
+.x-sh-t { font: 600 17px/24px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); text-wrap: balance; }
+.x-sh-s { margin-top: 6px; font: 400 13px/19px "Noto Sans KR", sans-serif; color: var(--x-dim); }
+.x-sh-list { display: grid; gap: 1px; margin-top: 14px; border-radius: 6px; overflow: hidden; background: var(--x-line); }
+.x-sh-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 16px; background: var(--x-card); border: 0; text-align: left; color: var(--x-ink-hi); font: 400 15px/1.3 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-sh-item:active { background: var(--x-card-hi); }
+.x-sh-item .lb { flex: 1; }
+.x-sh-item .sb { font-size: 12px; color: var(--x-dim); }
+.x-sh-item.danger { color: #F08A80; }
+.x-sh-item.primary { background: var(--x-btn); color: var(--x-btn-ink); font-weight: 500; justify-content: center; }
+.x-sh-item .ck { width: 18px; height: 18px; color: var(--x-ink-hi); }
+.x-sh-cancel { display: block; width: 100%; height: 48px; margin-top: 10px; border: 0; border-radius: 6px; background: transparent; color: var(--x-ink); font: 500 15px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-pin-dots { display: flex; gap: 18px; justify-content: center; margin: 22px 0 18px; }
+.x-pin-dots i { width: 13px; height: 13px; border-radius: 50%; border: 1.4px solid var(--x-ink); box-sizing: border-box; transition: background .12s ease; }
+.x-pin-dots i.on { background: var(--x-ink-hi); border-color: var(--x-ink-hi); }
+.x-pin-dots.shake { animation: x-shake .4s ease; }
+@keyframes x-shake { 20%,60% { transform: translateX(-8px); } 40%,80% { transform: translateX(8px); } }
+.x-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.x-pad button { height: 54px; border: 0; border-radius: 8px; background: var(--x-card); color: var(--x-ink-hi); font: 400 24px/1 var(--x-num); cursor: pointer; }
+.x-pad button:active { background: var(--x-card-hi); }
+.x-pad button.nil { visibility: hidden; }
+.x-pad button.del { font-size: 15px; font-family: "Noto Sans KR", sans-serif; background: transparent; }
+.x-toast { position: absolute; left: 50%; top: 62px; z-index: 70; display: flex; align-items: center; gap: 14px; max-width: 333px; width: max-content; padding: 12px 16px; box-sizing: border-box; border-radius: 10px; background: #E4D6D6; color: #2A0A0A; font: 500 13px/18px "Noto Sans KR", sans-serif; transform: translate(-50%, -10px); opacity: 0; pointer-events: none; transition: opacity .22s ease, transform .3s cubic-bezier(.22,.8,.3,1); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.x-toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.x-toast button { flex: none; border: 0; background: transparent; padding: 0; color: #7A1E16; font: 600 13px/18px "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-badge { position: absolute; left: 318.5px; top: 71px; width: 9px; height: 9px; border-radius: 50%; background: var(--x-sos); box-shadow: 0 0 0 2px #2A0606; z-index: 21; pointer-events: none; }
+
+/* lists */
+.x-scroll { position: absolute; left: 0; width: 393px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; overscroll-behavior: contain; }
+.x-scroll::-webkit-scrollbar { display: none; }
+.x-fade-b { position: absolute; left: 0; bottom: 0; width: 393px; height: 120px; pointer-events: none; z-index: 5; background: linear-gradient(180deg, rgba(0,0,0,0), #000 82%); }
+.x-sec { padding: 18px 22px 8px; font: 500 12px/1 "Noto Sans KR", sans-serif; letter-spacing: .04em; color: var(--x-dim); }
+.x-tag { display: inline-grid; place-items: center; height: 20px; padding: 0 7px; border-radius: 3px; background: var(--x-btn); color: var(--x-btn-ink); font: 700 10px/1 var(--x-title); letter-spacing: .1em; }
+.x-tag.sos { background: var(--x-sos); color: #fff; }
+.x-tag.ghost { background: transparent; color: var(--x-ink); box-shadow: inset 0 0 0 1px var(--x-faint); }
+.x-empty { padding: 60px 40px; text-align: center; }
+.x-empty b { display: block; font: 500 15px/22px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-empty span { display: block; margin-top: 6px; font: 400 13px/19px "Noto Sans KR", sans-serif; color: var(--x-dim); }
+
+/* notifications */
+.x-chips { position: absolute; left: 20px; right: 20px; display: flex; gap: 6px; }
+.x-chip { height: 32px; padding: 0 13px; border-radius: 16px; border: 1px solid var(--x-line); background: transparent; color: var(--x-ink); font: 500 13px/1 "Noto Sans KR", sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.x-chip em { font: 500 12px/1 var(--x-num); font-style: normal; opacity: .7; }
+.x-chip.on { background: var(--x-btn); border-color: var(--x-btn); color: var(--x-btn-ink); }
+.x-nwrap { position: relative; margin: 0 20px 8px; border-radius: 4px; overflow: hidden; transition: height .22s ease, margin .22s ease, opacity .2s ease; }
+.x-ndel { position: absolute; right: 0; top: 0; bottom: 0; width: 84px; border: 0; background: #7A1E16; color: #FBE9E7; font: 500 14px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-ncard { position: relative; display: grid; grid-template-columns: 24px 1fr auto; column-gap: 8px; row-gap: 5px; width: 100%; padding: 11px 14px 12px 14px; box-sizing: border-box; background: var(--x-card); border: 1px solid var(--x-line); border-radius: 4px; text-align: left; cursor: pointer; touch-action: pan-y; color: var(--x-ink); }
+.x-ncard.unread { background: var(--x-card-hi); border-color: rgba(222,195,198,.32); }
+.x-ncard .ico { grid-row: 1; display: grid; place-items: center; height: 22px; }
+.x-ncard .h { align-self: center; font: 700 15px/22px var(--x-title); letter-spacing: .02em; color: var(--x-ink-hi); }
+.x-ncard .h.sos { color: #F2A098; }
+.x-ncard .tm { align-self: center; display: inline-flex; align-items: center; gap: 6px; font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-ncard .tm i { width: 6px; height: 6px; border-radius: 50%; background: var(--x-sos); }
+.x-ncard .b { grid-column: 1 / -1; font: 400 13px/19px "Noto Sans KR", sans-serif; color: var(--x-ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.x-ncard:not(.unread) .h, .x-ncard:not(.unread) .b { opacity: .72; }
+.x-nd-top { display: flex; align-items: center; justify-content: space-between; }
+.x-nd-time { font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-nd-title { margin-top: 14px; font: 600 19px/26px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-nd-body { margin-top: 6px; font: 400 14px/21px "Noto Sans KR", sans-serif; color: var(--x-ink); }
+.x-meta { margin: 16px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 9px 18px; padding: 14px 16px; border-radius: 6px; background: var(--x-card); }
+.x-meta dt { font: 400 12px/18px "Noto Sans KR", sans-serif; color: var(--x-dim); }
+.x-meta dd { margin: 0; font: 400 13px/18px "Noto Sans KR", var(--x-num); color: var(--x-ink-hi); font-variant-numeric: tabular-nums; text-align: right; }
+.x-sh-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.x-sh-acts.one { grid-template-columns: 1fr; }
+.x-sh-acts button { height: 50px; border-radius: 6px; border: 1px solid var(--x-faint); background: transparent; color: var(--x-ink-hi); font: 500 15px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-sh-acts button.primary { background: var(--x-btn); border-color: var(--x-btn); color: var(--x-btn-ink); }
+
+/* calendar */
+.x-cal-head { position: absolute; left: 20px; right: 20px; height: 36px; display: flex; align-items: center; justify-content: space-between; }
+.x-month { display: flex; align-items: baseline; gap: 8px; }
+.x-month .m { font: 700 28px/1 var(--x-title); letter-spacing: -.02em; color: var(--x-ink-hi); }
+.x-month .y { font: 400 15px/1 var(--x-num); color: var(--x-dim); }
+.x-cal-nav { display: flex; gap: 6px; }
+.x-cal-nav button { width: 44px; height: 36px; border-radius: 4px; border: 0; background: var(--x-card); color: var(--x-ink); cursor: pointer; display: grid; place-items: center; }
+.x-cal-nav button:active { background: var(--x-card-hi); }
+.x-cal-sum { position: absolute; left: 20px; display: flex; gap: 14px; font: 400 12px/1 "Noto Sans KR", sans-serif; color: var(--x-dim); }
+.x-cal-sum span { display: inline-flex; align-items: center; gap: 6px; }
+.x-cal-sum b { font: 600 12px/1 var(--x-num); color: var(--x-ink-hi); font-variant-numeric: tabular-nums; }
+.x-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+.x-dot.DETECT, .x-dot.ALERT { background: var(--x-ink-hi); }
+.x-dot.RECORD { background: rgba(181,164,164,.5); }
+.x-dot.SOS { background: var(--x-sos); }
+.x-cal-wd, .x-cal-grid { position: absolute; left: 20px; width: 353px; display: grid; grid-template-columns: repeat(7, 1fr); }
+.x-cal-wd span { text-align: center; font: 500 13px/24px var(--x-num); color: var(--x-ink); }
+.x-cal-wd span:first-child { color: #D88A82; }
+.x-cal-gw { position: absolute; left: 0; width: 393px; overflow: hidden; touch-action: pan-y; }
+.x-cal-grid { top: 0; grid-auto-rows: 42px; transition: transform .26s cubic-bezier(.22,.8,.3,1), opacity .2s ease; }
+.x-cal-grid.out-l { transform: translateX(-40px); opacity: 0; }
+.x-cal-grid.out-r { transform: translateX(40px); opacity: 0; }
+.x-cal-grid.snap { transition: none; }
+.x-day { position: relative; margin: 2px 4px; border: 0; border-radius: 6px; background: transparent; color: var(--x-ink); cursor: pointer; font: 400 15px/1 var(--x-num); font-variant-numeric: tabular-nums; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0; }
+.x-day .dots { display: flex; gap: 3px; height: 5px; }
+.x-day.sun { color: #D88A82; }
+.x-day.future { opacity: .35; }
+.x-day.today { box-shadow: inset 0 0 0 1px rgba(222,195,198,.55); }
+.x-day.sel { background: var(--x-btn); color: var(--x-btn-ink); box-shadow: none; opacity: 1; }
+.x-day.sel .x-dot.DETECT, .x-day.sel .x-dot.ALERT, .x-day.sel .x-dot.RECORD { background: var(--x-btn-ink); }
+.x-day:not(.sel):active { background: var(--x-card); }
+.x-dayhead { position: absolute; left: 20px; right: 20px; height: 40px; display: flex; align-items: baseline; gap: 10px; }
+.x-dayhead .d { font: 500 34px/1 var(--x-title); color: var(--x-ink-hi); font-variant-numeric: tabular-nums; }
+.x-dayhead .w { font: 400 13px/1 "Noto Sans KR", var(--x-num); color: var(--x-ink); }
+.x-dayhead .x-cal-nav { margin-left: auto; align-self: center; }
+.x-ev { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; width: 353px; height: 56px; margin: 0 20px 8px; padding: 0 12px 0 10px; box-sizing: border-box; border: 0; border-radius: 4px; background: var(--x-card); color: var(--x-ink-hi); text-align: left; cursor: pointer; }
+.x-ev:active { background: var(--x-card-hi); }
+.x-ev .t { font: 400 14px/1.3 "Noto Sans KR", sans-serif; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.x-ev .tm { font: 400 13px/1 var(--x-num); color: var(--x-ink); font-variant-numeric: tabular-nums; }
+.x-ev .x-tag { width: 64px; height: 24px; padding: 0; }
+
+/* record */
+.x-player { position: absolute; overflow: hidden; border-radius: 3px; background: #050101; }
+.x-vid { position: absolute; inset: 0; }
+.x-vid img { position: absolute; left: -12px; top: -8px; width: 377px; height: 216px; max-width: none; object-fit: cover; will-change: transform; }
+.x-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .5; mix-blend-mode: screen; pointer-events: none; }
+.x-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.x-flash.go { animation: x-flash .35s ease-out; }
+@keyframes x-flash { 0% { opacity: .85; } 100% { opacity: 0; } }
+.x-crn { position: absolute; width: 18px; height: 18px; border-color: rgba(236,226,226,.75); border-style: solid; border-width: 0; pointer-events: none; }
+.x-pb-tl { position: absolute; left: 14px; top: 12px; display: flex; align-items: center; gap: 6px; font: 600 11px/1 var(--x-num); letter-spacing: .06em; color: #F4ECEC; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.x-pb-tl .rd { width: 6px; height: 6px; border-radius: 50%; background: var(--x-sos); }
+.x-pb-tl .rd.blink { animation: x-blink 1s steps(1) infinite; }
+.x-pb-tl .rd.off { background: #9C8E8E; }
+.x-pb-tr { position: absolute; right: 12px; top: 10px; height: 18px; padding: 0 6px; border-radius: 2px; border: 1px solid rgba(236,226,226,.7); background: transparent; color: #F4ECEC; font: 600 10px/16px var(--x-num); letter-spacing: .06em; }
+button.x-pb-tr { cursor: pointer; height: 22px; padding: 0 8px; background: rgba(0,0,0,.35); display: inline-flex; align-items: center; gap: 5px; }
+button.x-pb-tr i { width: 6px; height: 6px; border-radius: 50%; background: var(--x-sos); }
+.x-pb-ts { position: absolute; left: 14px; bottom: 11px; font: 500 12px/1 var(--x-num); color: #F4ECEC; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
+.x-pb-big { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; border: 0; background: rgba(0,0,0,.45); color: #F4ECEC; display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.x-pb-big.show { opacity: 1; pointer-events: auto; }
+.x-scrub { position: absolute; left: 20px; width: 353px; }
+.x-scrub .lbl { display: flex; justify-content: space-between; font: 400 11px/1 var(--x-num); color: var(--x-ink); font-variant-numeric: tabular-nums; }
+.x-scrub .lbl .live { display: inline-flex; align-items: center; gap: 5px; color: #F2A098; font-weight: 600; letter-spacing: .06em; }
+.x-scrub .bar { position: relative; height: 18px; margin-top: 3px; cursor: pointer; touch-action: none; }
+.x-scrub .bar::before { content: ""; position: absolute; left: 0; right: 0; top: 7.5px; height: 3px; border-radius: 2px; background: rgba(181,164,164,.28); }
+.x-scrub .fill { position: absolute; left: 0; top: 7.5px; height: 3px; border-radius: 2px; background: var(--x-ink-hi); width: 0; }
+.x-scrub .knob { position: absolute; top: 3px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #F0E2E3; box-shadow: 0 0 0 3px rgba(222,195,198,.18); }
+.x-scrub.live .bar { cursor: default; }
+.x-scrub.live .fill { width: 100% !important; background: rgba(229,87,75,.6); }
+.x-scrub.live .knob { display: none; }
+.x-cbtn { position: absolute; border: 0; cursor: pointer; display: grid; place-items: center; color: var(--x-btn-ink); background: var(--x-btn); -webkit-tap-highlight-color: transparent; transition: transform .12s ease, opacity .2s ease; }
+.x-cbtn:active { transform: scale(.94); }
+.x-cbtn.round { width: 44px; height: 44px; border-radius: 22px; }
+.x-cbtn.main { width: 90px; height: 45px; border-radius: 4px; }
+.x-cbtn.off { background: rgba(199,182,182,.35); color: var(--x-ink-hi); }
+.x-tlhead { position: absolute; left: 20px; right: 14px; height: 34px; display: flex; align-items: center; gap: 10px; }
+.x-tlhead .tt { font: 700 24px/1 var(--x-title); letter-spacing: -.01em; color: var(--x-ink); }
+.x-tlhead .fchip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 13px; border: 0; background: var(--x-btn); color: var(--x-btn-ink); font: 500 12px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-tlhead .x-ib { position: relative; margin-left: auto; }
+.x-clip { position: relative; display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: 12px; width: 353px; height: 58px; margin: 0 20px 6px; padding: 0 12px 0 8px; box-sizing: border-box; border: 1px solid transparent; border-radius: 4px; background: var(--x-card); color: var(--x-ink-hi); text-align: left; cursor: pointer; }
+.x-clip.sel { border-color: rgba(222,195,198,.55); background: var(--x-card-hi); }
+.x-clip .th { position: relative; width: 54px; height: 40px; border-radius: 2px; overflow: hidden; background: #000; }
+.x-clip .th img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
+.x-clip .th em { position: absolute; right: 3px; bottom: 2px; font: 600 9px/1 var(--x-num); font-style: normal; color: #fff; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
+.x-clip .t1 { display: flex; align-items: center; gap: 5px; font: 500 14px/1.2 "Noto Sans KR", sans-serif; }
+.x-clip .t2 { margin-top: 4px; font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; margin-left: 2px; }
+.x-eq i { width: 2px; background: var(--x-ink-hi); animation: x-eq .9s ease-in-out infinite; }
+.x-eq i:nth-child(2) { animation-delay: -.3s; }
+.x-eq i:nth-child(3) { animation-delay: -.6s; }
+.x-eq.pause i { animation-play-state: paused; }
+@keyframes x-eq { 0%,100% { height: 3px; } 50% { height: 10px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .x-pulse i, .x-rot, .x-eq i, .x-glyph.breathe { animation-duration: 6s; }
+}
+</style>
+
+<div id="wrap"><div id="holder"><div id="stage" role="application" aria-label="SCORP-ON 앱 프로토타입"></div></div></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="sgo" x1="-82.107" y1="254.894" x2="240.345" y2="50.4821" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DADADA"/><stop offset="1" stop-color="#D2C6C6"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="286" y2="286" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D2C6C6" stop-opacity="0.12"/><stop offset="0.5" stop-color="#D2C6C6" stop-opacity="0.12"/><stop offset="1" stop-color="#D2C6C6" stop-opacity="0.55"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<script>
+(() => {
+const W = 393, H = 852;
+const EASE = {
+  io: 'cubic-bezier(.42,0,.58,1)',
+  slow: 'cubic-bezier(.22,.8,.3,1)',
+};
+const stage = document.getElementById('stage');
+const holder = document.getElementById('holder');
+
+/* ---------- scaling ---------- */
+function fit() {
+  const availW = Math.max(100, window.innerWidth - 32);
+  const s = Math.min(availW / W, window.innerHeight * 0.96 / H);
+  stage.style.transform = `scale(${s})`;
+  holder.style.width = (W * s) + 'px';
+  holder.style.height = (H * s) + 'px';
+}
+window.addEventListener('resize', fit); fit();
+
+/* ---------- helpers ---------- */
+const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+const img = (src, x, y, extra = '') => `<img src="img3/${src}" alt="" style="left:${x}px;top:${y}px;${extra}">`;
+const patch = (x, y, w, h, inner, cls = '') =>
+  `<div class="patch ${cls}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"><div class="fc" style="left:${-x}px;top:${-y}px">${inner}</div></div>`;
+
+/* ---------- screens ---------- */
+const S = {};
+let current = null, busy = false;
+const timers = new Set();
+const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); fn(); }, ms); timers.add(t); return t; };
+const clearTimers = () => { timers.forEach(clearTimeout); timers.clear(); };
+const rafs = new Set();
+
+function makeScreen(id, base) {
+  const s = el(`<section class="screen" data-id="${id}">${base ? `<img class="base" src="img3/${base}" alt="" style="left:0;top:0;width:393px;height:852px">` : ''}</section>`);
+  stage.appendChild(s);
+  S[id] = { el: s, hs: [], auto: null, enter: null };
+  return S[id];
+}
+function hotspot(scr, x, y, w, h, to, dur = 400, ease = EASE.io, label = '') {
+  const b = el(`<button class="hs" type="button" aria-label="${label || to}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"></button>`);
+  b.addEventListener('click', () => go(to, dur, ease));
+  (scr.layer || scr.el).appendChild(b);
+}
+
+const GO_HOOKS = [];
+function go(to, dur = 400, ease = EASE.io, isBack = false) {
+  if (busy || !S[to] || (current && current.id === to)) return;
+  busy = true;
+  clearTimers();
+  GO_HOOKS.forEach(f => f(to));
+  const prev = current;
+  const next = S[to];
+  next.id = to;
+  if (!isBack && prev) next.from = prev.id;
+  next.el.classList.add('on');
+  next.el.style.transition = 'none';
+  next.el.style.opacity = dur ? 0 : 1;
+  next.el.style.zIndex = 2;
+  if (prev) prev.el.style.zIndex = 1;
+  if (next.enter) next.enter();
+  void next.el.offsetWidth;
+  const done = () => {
+    if (prev) { prev.el.classList.remove('on'); prev.el.style.zIndex = ''; if (prev.leave) prev.leave(); }
+    next.el.style.zIndex = '';
+    current = next; busy = false;
+    if (next.start) next.start();
+    if (next.auto) later(() => go(next.auto.to, next.auto.dur, next.auto.ease), next.auto.after);
+  };
+  if (!dur) { done(); return; }
+  next.el.style.transition = `opacity ${dur}ms ${ease}`;
+  next.el.style.opacity = 1;
+  later(done, dur + 20);
+}
+
+/* =========================================================
+   1 · Home
+   ========================================================= */
+{
+  const s = makeScreen('s1', 's1.png');
+  hotspot(s, 254, 498, 118, 41, 's2', 400, EASE.io, 'Bluetooth');
+  hotspot(s, 299, 69, 32, 32, 's128', 400, EASE.io, '알림');
+  hotspot(s, 337, 69, 32, 32, 's124', 400, EASE.io, '설정');
+  hotspot(s, 151, 754, 32, 32, 's126', 1250, EASE.slow, 'Scan');
+  hotspot(s, 203, 754, 32, 32, 's127', 1250, EASE.slow, 'Level');
+  hotspot(s, 313, 740, 60, 60, 's4', 400, EASE.io, '긴급 신고');
+}
+
+/* =========================================================
+   2 · Scanning (loading dots rotate 45° every 1.1s)
+   ========================================================= */
+{
+  const s = makeScreen('s2', 's2.png');
+  s.el.insertAdjacentHTML('beforeend', patch(65, 348.3, 263, 260,
+    `<div class="grad"></div>` +
+    `<img class="spin" id="dots" src="img3/r_dots.png" alt="" style="left:65px;top:348.3px;width:263px;height:260px;transform-origin:129.97px 128.2px">` +
+    img('l2_vector.png', 0, 62, 'width:393px;height:790px') +
+    img('l2_scanning.png', 155, 466, 'width:82px;height:28px')));
+  const dots = s.el.querySelector('#dots');
+  let angle = 0;
+  s.enter = () => { angle = 0; dots.style.transition = 'none'; dots.style.transform = 'rotate(0deg)'; };
+  s.start = () => {
+    const step = () => {
+      angle -= 45;
+      dots.style.transition = `transform 800ms ${EASE.io}`;
+      dots.style.transform = `rotate(${angle}deg)`;
+      later(step, 1100);
+    };
+    later(step, 300);
+  };
+  s.auto = { after: 3000, to: 's3', dur: 1000, ease: EASE.io };
+  hotspot(s, 24, 60, 43, 51, 's1', 400, EASE.io, '뒤로');
+}
+
+/* =========================================================
+   3 · Connected
+   ========================================================= */
+{
+  const s = makeScreen('s3', 's3.png');
+  hotspot(s, 105, 716, 184, 66, 's1', 400, EASE.io, 'Start');
+  hotspot(s, 24, 60, 43, 51, 's1', 400, EASE.io, '뒤로');
+}
+
+/* =========================================================
+   126 · Scan (radar sweep)
+   ========================================================= */
+{
+  const s = makeScreen('s126', 's126.png');
+  s.el.insertAdjacentHTML('beforeend', patch(12.8, 142.7, 326, 320.2,
+    `<div class="grad"></div>
+     <svg style="position:absolute;left:12.8px;top:142.7px" width="326" height="321" viewBox="0 0 326 321" fill="none" aria-hidden="true">
+       <circle cx="183.366" cy="177.555" r="142.373" stroke="#B5A4A4" stroke-width="0.5"/>
+       <circle cx="183.366" cy="177.555" r="118.603" stroke="#B5A4A4" stroke-width="0.5" stroke-dasharray="2.6 2.6"/>
+       <circle cx="183.367" cy="177.551" r="94.8321" stroke="#B5A4A4" stroke-width="0.5" stroke-dasharray="2.6 2.6"/>
+       <circle cx="183.367" cy="177.552" r="71.0616" stroke="#B5A4A4" stroke-width="0.5" stroke-dasharray="2.6 2.6"/>
+       <circle cx="183.36" cy="177.552" r="47.2911" stroke="#B5A4A4" stroke-width="0.5" stroke-dasharray="2.6 2.6"/>
+       <circle cx="183.364" cy="177.552" r="23.5205" stroke="#B5A4A4" stroke-width="0.5" stroke-dasharray="2.6 2.6"/>
+       <path d="M304.603 250.05L183.207 176.66M183.207 176.66L61.811 250.05M183.207 176.66L183.207 35.9013" stroke="#B5A4A4" stroke-width="0.5" stroke-dasharray="2.6 2.6"/>
+       <path d="M308.862 110.771L183.259 176.703M183.259 176.703L183.274 318.559M183.259 176.703L62.7939 103.894" stroke="#B5A4A4" stroke-width="0.5" stroke-dasharray="2.6 2.6"/>
+     </svg>
+     <img class="spin radar-sweep" src="img3/r_wedge.png" alt="" style="left:12.8px;top:142.7px;width:326px;height:321px">
+     <svg style="position:absolute;left:12.8px;top:142.7px" width="326" height="321" viewBox="0 0 326 321" fill="none" aria-hidden="true">
+       <circle cx="284.449" cy="238.874" r="6" fill="#B5A4A4"/>
+       <circle cx="79.7397" cy="238.874" r="6" fill="#B5A4A4"/>
+       <circle cx="98.7397" cy="124.01" r="6" fill="#B5A4A4"/>
+     </svg>
+     ${img('l126_logo.png', 127, 277, 'width:146px;height:82px;mix-blend-mode:luminosity')}
+     ${img('l126_glow.png', 65, 435, 'width:264px;height:55px')}`));
+  hotspot(s, 251, 498, 121, 41, 's120', 400, EASE.io, 'Record');
+  hotspot(s, 299, 69, 32, 32, 's128', 400, EASE.io, '알림');
+  hotspot(s, 337, 69, 32, 32, 's124', 400, EASE.io, '설정');
+  hotspot(s, 313, 740, 60, 60, 's4', 400, EASE.io, '긴급 신고');
+  hotspot(s, 202, 754, 32, 32, 's127', 1250, EASE.slow, 'Level');
+  hotspot(s, 40, 754, 32, 32, 's1', 1250, EASE.slow, 'Home');
+}
+
+/* =========================================================
+   127 · Level (4 sensitivity dials)
+   ========================================================= */
+{
+  const s = makeScreen('s127', 's127_clean.png');
+  const L = {
+    100: 'M118.588 27.4546V14.9346H118.268L115.968 19.6546H113.748L116.848 13.4546H120.688V27.4546H118.588ZM128.379 27.7346C126.753 27.7346 125.453 27.2746 124.479 26.3546C123.519 25.4213 123.039 24.0213 123.039 22.1546V18.7546C123.039 16.9279 123.519 15.5413 124.479 14.5946C125.453 13.6479 126.753 13.1746 128.379 13.1746C130.019 13.1746 131.319 13.6479 132.279 14.5946C133.253 15.5413 133.739 16.9279 133.739 18.7546V22.1546C133.739 24.0213 133.253 25.4213 132.279 26.3546C131.319 27.2746 130.019 27.7346 128.379 27.7346ZM128.379 25.8546C129.486 25.8546 130.306 25.5413 130.839 24.9146C131.373 24.2746 131.639 23.3813 131.639 22.2346V18.6346C131.639 17.4879 131.353 16.6079 130.779 15.9946C130.206 15.3679 129.406 15.0546 128.379 15.0546C127.339 15.0546 126.539 15.3746 125.979 16.0146C125.419 16.6413 125.139 17.5146 125.139 18.6346V22.2346C125.139 23.4079 125.406 24.3079 125.939 24.9346C126.486 25.5479 127.299 25.8546 128.379 25.8546ZM141.07 27.7346C139.443 27.7346 138.143 27.2746 137.17 26.3546C136.21 25.4213 135.73 24.0213 135.73 22.1546V18.7546C135.73 16.9279 136.21 15.5413 137.17 14.5946C138.143 13.6479 139.443 13.1746 141.07 13.1746C142.71 13.1746 144.01 13.6479 144.97 14.5946C145.943 15.5413 146.43 16.9279 146.43 18.7546V22.1546C146.43 24.0213 145.943 25.4213 144.97 26.3546C144.01 27.2746 142.71 27.7346 141.07 27.7346ZM141.07 25.8546C142.177 25.8546 142.997 25.5413 143.53 24.9146C144.063 24.2746 144.33 23.3813 144.33 22.2346V18.6346C144.33 17.4879 144.043 16.6079 143.47 15.9946C142.897 15.3679 142.097 15.0546 141.07 15.0546C140.03 15.0546 139.23 15.3746 138.67 16.0146C138.11 16.6413 137.83 17.5146 137.83 18.6346V22.2346C137.83 23.4079 138.097 24.3079 138.63 24.9346C139.177 25.5479 139.99 25.8546 141.07 25.8546ZM150.141 27.7146L148.861 26.6746L159.801 13.1946L161.081 14.2346L150.141 27.7146ZM158.801 27.6746C157.814 27.6746 157.034 27.4013 156.461 26.8546C155.887 26.2946 155.601 25.5413 155.601 24.5946V24.4746C155.601 23.5146 155.887 22.7613 156.461 22.2146C157.034 21.6546 157.814 21.3746 158.801 21.3746C159.774 21.3746 160.554 21.6546 161.141 22.2146C161.727 22.7613 162.021 23.5146 162.021 24.4746V24.5946C162.021 25.5413 161.727 26.2946 161.141 26.8546C160.567 27.4013 159.787 27.6746 158.801 27.6746ZM158.801 26.2746C159.281 26.2746 159.654 26.1279 159.921 25.8346C160.201 25.5413 160.341 25.1546 160.341 24.6746V24.3946C160.341 23.9013 160.201 23.5079 159.921 23.2146C159.654 22.9213 159.281 22.7746 158.801 22.7746C158.334 22.7746 157.961 22.9213 157.681 23.2146C157.414 23.5079 157.281 23.9013 157.281 24.3946V24.6746C157.281 25.1546 157.414 25.5413 157.681 25.8346C157.961 26.1279 158.334 26.2746 158.801 26.2746ZM151.141 19.5346C150.154 19.5346 149.367 19.2613 148.781 18.7146C148.207 18.1546 147.921 17.4013 147.921 16.4546V16.3146C147.921 15.3546 148.207 14.6013 148.781 14.0546C149.367 13.5079 150.154 13.2346 151.141 13.2346C152.114 13.2346 152.887 13.5079 153.461 14.0546C154.047 14.6013 154.341 15.3546 154.341 16.3146V16.4546C154.341 17.4013 154.054 18.1546 153.481 18.7146C152.907 19.2613 152.127 19.5346 151.141 19.5346ZM151.141 18.1346C151.607 18.1346 151.974 17.9879 152.241 17.6946C152.521 17.3879 152.661 16.9946 152.661 16.5146V16.2346C152.661 15.7546 152.521 15.3679 152.241 15.0746C151.974 14.7813 151.607 14.6346 151.141 14.6346C150.661 14.6346 150.281 14.7813 150.001 15.0746C149.734 15.3679 149.601 15.7546 149.601 16.2346V16.5146C149.601 16.9946 149.734 17.3879 150.001 17.6946C150.281 17.9879 150.661 18.1346 151.141 18.1346Z',
+    75: 'M126.396 27.4546V26.9546C126.396 26.4479 126.436 26.0279 126.516 25.6946C126.596 25.3479 126.763 24.9479 127.016 24.4946L132.016 15.5946V15.3346H124.156V13.4546H134.196V15.9346L128.936 25.3746C128.776 25.6679 128.663 25.9346 128.596 26.1746C128.529 26.4013 128.496 26.6879 128.496 27.0346V27.4546H126.396ZM140.588 27.7346C139.535 27.7346 138.621 27.5413 137.848 27.1546C137.075 26.7679 136.475 26.2213 136.048 25.5146C135.635 24.8079 135.428 23.9879 135.428 23.0546V22.8346H137.568V23.0346C137.568 23.8879 137.828 24.5746 138.348 25.0946C138.881 25.6013 139.621 25.8546 140.568 25.8546C141.541 25.8546 142.295 25.5879 142.828 25.0546C143.361 24.5213 143.628 23.8013 143.628 22.8946V22.7146C143.628 21.8479 143.361 21.1546 142.828 20.6346C142.308 20.1146 141.641 19.8546 140.828 19.8546C140.375 19.8546 139.995 19.9279 139.688 20.0746C139.395 20.2079 139.155 20.3746 138.968 20.5746C138.795 20.7746 138.648 20.9679 138.528 21.1546H135.868V13.4546H145.248V15.3546H137.968V19.4746H138.288C138.421 19.2479 138.608 19.0346 138.848 18.8346C139.101 18.6213 139.428 18.4479 139.828 18.3146C140.228 18.1813 140.708 18.1146 141.268 18.1146C142.095 18.1146 142.841 18.2946 143.508 18.6546C144.188 19.0013 144.728 19.5213 145.128 20.2146C145.528 20.8946 145.728 21.7213 145.728 22.6946V22.9146C145.728 23.8879 145.521 24.7346 145.108 25.4546C144.695 26.1746 144.101 26.7346 143.328 27.1346C142.568 27.5346 141.655 27.7346 140.588 27.7346ZM149.141 27.7146L147.861 26.6746L158.801 13.1946L160.081 14.2346L149.141 27.7146ZM157.801 27.6746C156.814 27.6746 156.034 27.4013 155.461 26.8546C154.887 26.2946 154.601 25.5413 154.601 24.5946V24.4746C154.601 23.5146 154.887 22.7613 155.461 22.2146C156.034 21.6546 156.814 21.3746 157.801 21.3746C158.774 21.3746 159.554 21.6546 160.141 22.2146C160.727 22.7613 161.021 23.5146 161.021 24.4746V24.5946C161.021 25.5413 160.727 26.2946 160.141 26.8546C159.567 27.4013 158.787 27.6746 157.801 27.6746ZM157.801 26.2746C158.281 26.2746 158.654 26.1279 158.921 25.8346C159.201 25.5413 159.341 25.1546 159.341 24.6746V24.3946C159.341 23.9013 159.201 23.5079 158.921 23.2146C158.654 22.9213 158.281 22.7746 157.801 22.7746C157.334 22.7746 156.961 22.9213 156.681 23.2146C156.414 23.5079 156.281 23.9013 156.281 24.3946V24.6746C156.281 25.1546 156.414 25.5413 156.681 25.8346C156.961 26.1279 157.334 26.2746 157.801 26.2746ZM150.141 19.5346C149.154 19.5346 148.367 19.2613 147.781 18.7146C147.207 18.1546 146.921 17.4013 146.921 16.4546V16.3146C146.921 15.3546 147.207 14.6013 147.781 14.0546C148.367 13.5079 149.154 13.2346 150.141 13.2346C151.114 13.2346 151.887 13.5079 152.461 14.0546C153.047 14.6013 153.341 15.3546 153.341 16.3146V16.4546C153.341 17.4013 153.054 18.1546 152.481 18.7146C151.907 19.2613 151.127 19.5346 150.141 19.5346ZM150.141 18.1346C150.607 18.1346 150.974 17.9879 151.241 17.6946C151.521 17.3879 151.661 16.9946 151.661 16.5146V16.2346C151.661 15.7546 151.521 15.3679 151.241 15.0746C150.974 14.7813 150.607 14.6346 150.141 14.6346C149.661 14.6346 149.281 14.7813 149.001 15.0746C148.734 15.3679 148.601 15.7546 148.601 16.2346V16.5146C148.601 16.9946 148.734 17.3879 149.001 17.6946C149.281 17.9879 149.661 18.1346 150.141 18.1346Z',
+    50: 'M128.897 27.7346C127.844 27.7346 126.931 27.5413 126.157 27.1546C125.384 26.7679 124.784 26.2213 124.357 25.5146C123.944 24.8079 123.737 23.9879 123.737 23.0546V22.8346H125.877V23.0346C125.877 23.8879 126.137 24.5746 126.657 25.0946C127.191 25.6013 127.931 25.8546 128.877 25.8546C129.851 25.8546 130.604 25.5879 131.137 25.0546C131.671 24.5213 131.937 23.8013 131.937 22.8946V22.7146C131.937 21.8479 131.671 21.1546 131.137 20.6346C130.617 20.1146 129.951 19.8546 129.137 19.8546C128.684 19.8546 128.304 19.9279 127.997 20.0746C127.704 20.2079 127.464 20.3746 127.277 20.5746C127.104 20.7746 126.957 20.9679 126.837 21.1546H124.177V13.4546H133.557V15.3546H126.277V19.4746H126.597C126.731 19.2479 126.917 19.0346 127.157 18.8346C127.411 18.6213 127.737 18.4479 128.137 18.3146C128.537 18.1813 129.017 18.1146 129.577 18.1146C130.404 18.1146 131.151 18.2946 131.817 18.6546C132.497 19.0013 133.037 19.5213 133.437 20.2146C133.837 20.8946 134.037 21.7213 134.037 22.6946V22.9146C134.037 23.8879 133.831 24.7346 133.417 25.4546C133.004 26.1746 132.411 26.7346 131.637 27.1346C130.877 27.5346 129.964 27.7346 128.897 27.7346ZM141.07 27.7346C139.443 27.7346 138.143 27.2746 137.17 26.3546C136.21 25.4213 135.73 24.0213 135.73 22.1546V18.7546C135.73 16.9279 136.21 15.5413 137.17 14.5946C138.143 13.6479 139.443 13.1746 141.07 13.1746C142.71 13.1746 144.01 13.6479 144.97 14.5946C145.943 15.5413 146.43 16.9279 146.43 18.7546V22.1546C146.43 24.0213 145.943 25.4213 144.97 26.3546C144.01 27.2746 142.71 27.7346 141.07 27.7346ZM141.07 25.8546C142.177 25.8546 142.997 25.5413 143.53 24.9146C144.063 24.2746 144.33 23.3813 144.33 22.2346V18.6346C144.33 17.4879 144.043 16.6079 143.47 15.9946C142.897 15.3679 142.097 15.0546 141.07 15.0546C140.03 15.0546 139.23 15.3746 138.67 16.0146C138.11 16.6413 137.83 17.5146 137.83 18.6346V22.2346C137.83 23.4079 138.097 24.3079 138.63 24.9346C139.177 25.5479 139.99 25.8546 141.07 25.8546ZM150.141 27.7146L148.861 26.6746L159.801 13.1946L161.081 14.2346L150.141 27.7146ZM158.801 27.6746C157.814 27.6746 157.034 27.4013 156.461 26.8546C155.887 26.2946 155.601 25.5413 155.601 24.5946V24.4746C155.601 23.5146 155.887 22.7613 156.461 22.2146C157.034 21.6546 157.814 21.3746 158.801 21.3746C159.774 21.3746 160.554 21.6546 161.141 22.2146C161.727 22.7613 162.021 23.5146 162.021 24.4746V24.5946C162.021 25.5413 161.727 26.2946 161.141 26.8546C160.567 27.4013 159.787 27.6746 158.801 27.6746ZM158.801 26.2746C159.281 26.2746 159.654 26.1279 159.921 25.8346C160.201 25.5413 160.341 25.1546 160.341 24.6746V24.3946C160.341 23.9013 160.201 23.5079 159.921 23.2146C159.654 22.9213 159.281 22.7746 158.801 22.7746C158.334 22.7746 157.961 22.9213 157.681 23.2146C157.414 23.5079 157.281 23.9013 157.281 24.3946V24.6746C157.281 25.1546 157.414 25.5413 157.681 25.8346C157.961 26.1279 158.334 26.2746 158.801 26.2746ZM151.141 19.5346C150.154 19.5346 149.367 19.2613 148.781 18.7146C148.207 18.1546 147.921 17.4013 147.921 16.4546V16.3146C147.921 15.3546 148.207 14.6013 148.781 14.0546C149.367 13.5079 150.154 13.2346 151.141 13.2346C152.114 13.2346 152.887 13.5079 153.461 14.0546C154.047 14.6013 154.341 15.3546 154.341 16.3146V16.4546C154.341 17.4013 154.054 18.1546 153.481 18.7146C152.907 19.2613 152.127 19.5346 151.141 19.5346ZM151.141 18.1346C151.607 18.1346 151.974 17.9879 152.241 17.6946C152.521 17.3879 152.661 16.9946 152.661 16.5146V16.2346C152.661 15.7546 152.521 15.3679 152.241 15.0746C151.974 14.7813 151.607 14.6346 151.141 14.6346C150.661 14.6346 150.281 14.7813 150.001 15.0746C149.734 15.3679 149.601 15.7546 149.601 16.2346V16.5146C149.601 16.9946 149.734 17.3879 150.001 17.6946C150.281 17.9879 150.661 18.1346 151.141 18.1346Z',
+    25: 'M124.255 27.4546V25.8746C124.255 24.9013 124.422 24.1013 124.755 23.4746C125.088 22.8479 125.562 22.3413 126.175 21.9546C126.802 21.5546 127.555 21.2213 128.435 20.9546L129.655 20.5746C130.202 20.4013 130.668 20.1879 131.055 19.9346C131.455 19.6813 131.762 19.3679 131.975 18.9946C132.188 18.6079 132.295 18.1613 132.295 17.6546V17.5746C132.295 16.7879 132.028 16.1746 131.495 15.7346C130.962 15.2813 130.262 15.0546 129.395 15.0546C128.502 15.0546 127.775 15.2946 127.215 15.7746C126.668 16.2546 126.395 16.9613 126.395 17.8946V18.2146H124.315V17.9146C124.315 16.9013 124.535 16.0479 124.975 15.3546C125.415 14.6479 126.022 14.1079 126.795 13.7346C127.568 13.3613 128.435 13.1746 129.395 13.1746C130.355 13.1746 131.208 13.3546 131.955 13.7146C132.715 14.0746 133.308 14.5813 133.735 15.2346C134.175 15.8879 134.395 16.6546 134.395 17.5346V17.7146C134.395 18.6213 134.215 19.3746 133.855 19.9746C133.495 20.5746 132.995 21.0679 132.355 21.4546C131.728 21.8413 131.002 22.1679 130.175 22.4346L128.995 22.7946C128.368 22.9813 127.862 23.1879 127.475 23.4146C127.102 23.6279 126.822 23.8879 126.635 24.1946C126.462 24.5013 126.375 24.8946 126.375 25.3746V25.5746H134.275V27.4546H124.255ZM141.088 27.7346C140.035 27.7346 139.121 27.5413 138.348 27.1546C137.575 26.7679 136.975 26.2213 136.548 25.5146C136.135 24.8079 135.928 23.9879 135.928 23.0546V22.8346H138.068V23.0346C138.068 23.8879 138.328 24.5746 138.848 25.0946C139.381 25.6013 140.121 25.8546 141.068 25.8546C142.041 25.8546 142.795 25.5879 143.328 25.0546C143.861 24.5213 144.128 23.8013 144.128 22.8946V22.7146C144.128 21.8479 143.861 21.1546 143.328 20.6346C142.808 20.1146 142.141 19.8546 141.328 19.8546C140.875 19.8546 140.495 19.9279 140.188 20.0746C139.895 20.2079 139.655 20.3746 139.468 20.5746C139.295 20.7746 139.148 20.9679 139.028 21.1546H136.368V13.4546H145.748V15.3546H138.468V19.4746H138.788C138.921 19.2479 139.108 19.0346 139.348 18.8346C139.601 18.6213 139.928 18.4479 140.328 18.3146C140.728 18.1813 141.208 18.1146 141.768 18.1146C142.595 18.1146 143.341 18.2946 144.008 18.6546C144.688 19.0013 145.228 19.5213 145.628 20.2146C146.028 20.8946 146.228 21.7213 146.228 22.6946V22.9146C146.228 23.8879 146.021 24.7346 145.608 25.4546C145.195 26.1746 144.601 26.7346 143.828 27.1346C143.068 27.5346 142.155 27.7346 141.088 27.7346ZM149.641 27.7146L148.361 26.6746L159.301 13.1946L160.581 14.2346L149.641 27.7146ZM158.301 27.6746C157.314 27.6746 156.534 27.4013 155.961 26.8546C155.387 26.2946 155.101 25.5413 155.101 24.5946V24.4746C155.101 23.5146 155.387 22.7613 155.961 22.2146C156.534 21.6546 157.314 21.3746 158.301 21.3746C159.274 21.3746 160.054 21.6546 160.641 22.2146C161.227 22.7613 161.521 23.5146 161.521 24.4746V24.5946C161.521 25.5413 161.227 26.2946 160.641 26.8546C160.067 27.4013 159.287 27.6746 158.301 27.6746ZM158.301 26.2746C158.781 26.2746 159.154 26.1279 159.421 25.8346C159.701 25.5413 159.841 25.1546 159.841 24.6746V24.3946C159.841 23.9013 159.701 23.5079 159.421 23.2146C159.154 22.9213 158.781 22.7746 158.301 22.7746C157.834 22.7746 157.461 22.9213 157.181 23.2146C156.914 23.5079 156.781 23.9013 156.781 24.3946V24.6746C156.781 25.1546 156.914 25.5413 157.181 25.8346C157.461 26.1279 157.834 26.2746 158.301 26.2746ZM150.641 19.5346C149.654 19.5346 148.867 19.2613 148.281 18.7146C147.707 18.1546 147.421 17.4013 147.421 16.4546V16.3146C147.421 15.3546 147.707 14.6013 148.281 14.0546C148.867 13.5079 149.654 13.2346 150.641 13.2346C151.614 13.2346 152.387 13.5079 152.961 14.0546C153.547 14.6013 153.841 15.3546 153.841 16.3146V16.4546C153.841 17.4013 153.554 18.1546 152.981 18.7146C152.407 19.2613 151.627 19.5346 150.641 19.5346ZM150.641 18.1346C151.107 18.1346 151.474 17.9879 151.741 17.6946C152.021 17.3879 152.161 16.9946 152.161 16.5146V16.2346C152.161 15.7546 152.021 15.3679 151.741 15.0746C151.474 14.7813 151.107 14.6346 150.641 14.6346C150.161 14.6346 149.781 14.7813 149.501 15.0746C149.234 15.3679 149.101 15.7546 149.101 16.2346V16.5146C149.101 16.9946 149.234 17.3879 149.501 17.6946C149.781 17.9879 150.161 18.1346 150.641 18.1346Z',
+    0: 'M141.07 27.7346C139.443 27.7346 138.143 27.2746 137.17 26.3546C136.21 25.4213 135.73 24.0213 135.73 22.1546V18.7546C135.73 16.9279 136.21 15.5413 137.17 14.5946C138.143 13.6479 139.443 13.1746 141.07 13.1746C142.71 13.1746 144.01 13.6479 144.97 14.5946C145.943 15.5413 146.43 16.9279 146.43 18.7546V22.1546C146.43 24.0213 145.943 25.4213 144.97 26.3546C144.01 27.2746 142.71 27.7346 141.07 27.7346ZM141.07 25.8546C142.177 25.8546 142.997 25.5413 143.53 24.9146C144.063 24.2746 144.33 23.3813 144.33 22.2346V18.6346C144.33 17.4879 144.043 16.6079 143.47 15.9946C142.897 15.3679 142.097 15.0546 141.07 15.0546C140.03 15.0546 139.23 15.3746 138.67 16.0146C138.11 16.6413 137.83 17.5146 137.83 18.6346V22.2346C137.83 23.4079 138.097 24.3079 138.63 24.9346C139.177 25.5479 139.99 25.8546 141.07 25.8546ZM150.141 27.7146L148.861 26.6746L159.801 13.1946L161.081 14.2346L150.141 27.7146ZM158.801 27.6746C157.814 27.6746 157.034 27.4013 156.461 26.8546C155.887 26.2946 155.601 25.5413 155.601 24.5946V24.4746C155.601 23.5146 155.887 22.7613 156.461 22.2146C157.034 21.6546 157.814 21.3746 158.801 21.3746C159.774 21.3746 160.554 21.6546 161.141 22.2146C161.727 22.7613 162.021 23.5146 162.021 24.4746V24.5946C162.021 25.5413 161.727 26.2946 161.141 26.8546C160.567 27.4013 159.787 27.6746 158.801 27.6746ZM158.801 26.2746C159.281 26.2746 159.654 26.1279 159.921 25.8346C160.201 25.5413 160.341 25.1546 160.341 24.6746V24.3946C160.341 23.9013 160.201 23.5079 159.921 23.2146C159.654 22.9213 159.281 22.7746 158.801 22.7746C158.334 22.7746 157.961 22.9213 157.681 23.2146C157.414 23.5079 157.281 23.9013 157.281 24.3946V24.6746C157.281 25.1546 157.414 25.5413 157.681 25.8346C157.961 26.1279 158.334 26.2746 158.801 26.2746ZM151.141 19.5346C150.154 19.5346 149.367 19.2613 148.781 18.7146C148.207 18.1546 147.921 17.4013 147.921 16.4546V16.3146C147.921 15.3546 148.207 14.6013 148.781 14.0546C149.367 13.5079 150.154 13.2346 151.141 13.2346C152.114 13.2346 152.887 13.5079 153.461 14.0546C154.047 14.6013 154.341 15.3546 154.341 16.3146V16.4546C154.341 17.4013 154.054 18.1546 153.481 18.7146C152.907 19.2613 152.127 19.5346 151.141 19.5346ZM151.141 18.1346C151.607 18.1346 151.974 17.9879 152.241 17.6946C152.521 17.3879 152.661 16.9946 152.661 16.5146V16.2346C152.661 15.7546 152.521 15.3679 152.241 15.0746C151.974 14.7813 151.607 14.6346 151.141 14.6346C150.661 14.6346 150.281 14.7813 150.001 15.0746C149.734 15.3679 149.601 15.7546 149.601 16.2346V16.5146C149.601 16.9946 149.734 17.3879 150.001 17.6946C150.281 17.9879 150.661 18.1346 151.141 18.1346Z'
+  };
+  // variant states: progress, knob position, label, arc center x
+  const ST = {
+    '100': { p: 1,    k: [87.7505, 189.571], l: 100, cx: 85.25 },
+    'V9':  { p: .75,  k: [117.508, 176.187], l: 75,  cx: 84.75 },
+    '75':  { p: .75,  k: [117.508, 176.187], l: 75,  cx: 84.75 },
+    'V8':  { p: .5,   k: [132.717, 142.0],   l: 50,  cx: 85.25 },
+    '50':  { p: .5,   k: [132.306, 142.0],   l: 50,  cx: 85.25 },
+    'V7':  { p: .25,  k: [116.677, 107.625], l: 25,  cx: 84.75 },
+    '25':  { p: .25,  k: [116.677, 107.625], l: 25,  cx: 84.75 },
+    'V6':  { p: 0,    k: [86.223, 94.7904],  l: 0,   cx: 85.25 },
+    '0':   { p: 0,    k: [86.223, 94.7904],  l: 0,   cx: 85.25 },
+  };
+  const NEXT = { '100': 'V9', 'V9': 'V8', 'V8': 'V7', 'V7': 'V6', 'V6': '25', '25': '50', '50': '75', '75': '100', '0': '25' };
+  const CARDS = [
+    { x: 20,  y: 254,     init: '100' },
+    { x: 202, y: 254,     init: '75'  },
+    { x: 20,  y: 489.836, init: '50'  },
+    { x: 201, y: 489.836, init: '0'   },
+  ];
+  const R = 59.703, CY = 142.215;
+  const arcD = (cx, p) => {
+    if (p <= 0.001) return '';
+    const a0 = -Math.PI / 2, a1 = a0 + Math.PI * Math.min(p, 1);
+    const x0 = cx + R * Math.cos(a0), y0 = CY + R * Math.sin(a0);
+    const x1 = cx + R * Math.cos(a1), y1 = CY + R * Math.sin(a1);
+    return `M${x0} ${y0}A${R} ${R} 0 0 1 ${x1} ${y1}`;
+  };
+  const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  CARDS.forEach((c, i) => {
+    const svg = el(`<svg style="position:absolute;left:${c.x}px;top:${c.y}px;pointer-events:none" width="171" height="222" viewBox="0 0 171 222" fill="none" aria-hidden="true">
+      <path class="pg" stroke="#B5A4A4" stroke-width="3.062" stroke-linecap="round" fill="none"/>
+      <circle class="kn" r="4.01176" fill="#B5A4A4"/>
+      <path class="la" fill="#B5A4A4"/><path class="lb" fill="#B5A4A4" opacity="0"/>
+    </svg>`);
+    s.el.appendChild(svg);
+    c.svg = svg; c.pg = svg.querySelector('.pg'); c.kn = svg.querySelector('.kn');
+    c.la = svg.querySelector('.la'); c.lb = svg.querySelector('.lb');
+    const b = el(`<button class="hs" type="button" aria-label="감도 ${i + 1} 조절" style="left:${c.x + 24}px;top:${c.y + 72}px;width:132px;height:142px;border-radius:50%"></button>`);
+    b.addEventListener('click', () => advance(c));
+    s.el.appendChild(b);
+  });
+  const draw = (c, p, cx, kx, ky) => {
+    c.pg.setAttribute('d', arcD(cx, p));
+    c.kn.setAttribute('cx', kx); c.kn.setAttribute('cy', ky);
+  };
+  const set = (c, key) => {
+    const st = ST[key]; c.state = key; c.anim && cancelAnimationFrame(c.anim);
+    draw(c, st.p, st.cx, st.k[0], st.k[1]);
+    c.la.setAttribute('d', L[st.l]); c.la.setAttribute('opacity', 1); c.lb.setAttribute('opacity', 0);
+  };
+  function advance(c) {
+    const from = ST[c.state], toKey = NEXT[c.state], to = ST[toKey];
+    c.state = toKey;
+    c.anim && cancelAnimationFrame(c.anim);
+    c.lb.setAttribute('d', L[to.l]);
+    const t0 = performance.now(), D = 300;
+    const frame = (now) => {
+      const t = Math.min(1, (now - t0) / D), e = ease(t);
+      draw(c, from.p + (to.p - from.p) * e, from.cx + (to.cx - from.cx) * e,
+        from.k[0] + (to.k[0] - from.k[0]) * e, from.k[1] + (to.k[1] - from.k[1]) * e);
+      if (from.l !== to.l) { c.la.setAttribute('opacity', 1 - e); c.lb.setAttribute('opacity', e); }
+      if (t < 1) c.anim = requestAnimationFrame(frame);
+      else { c.anim = null; c.la.setAttribute('d', L[to.l]); c.la.setAttribute('opacity', 1); c.lb.setAttribute('opacity', 0); }
+    };
+    c.anim = requestAnimationFrame(frame);
+  }
+  s.enter = () => CARDS.forEach(c => set(c, c.init));
+  hotspot(s, 341, 198, 32, 32, 's123', 400, EASE.io, '캘린더');
+  hotspot(s, 299, 69, 32, 32, 's128', 400, EASE.io, '알림');
+  hotspot(s, 337, 69, 32, 32, 's124', 400, EASE.io, '설정');
+  hotspot(s, 313, 740, 60, 60, 's4', 400, EASE.io, '긴급 신고');
+  hotspot(s, 40, 754, 32, 32, 's1', 1250, EASE.slow, 'Home');
+  hotspot(s, 92, 754, 32, 32, 's126', 1250, EASE.slow, 'Scan');
+}
+
+/* keep rebuilt text within the width it has in Figma */
+function fitText(root) {
+  root.querySelectorAll('[data-w]').forEach(e => {
+    e.style.transform = '';
+    const w = +e.dataset.w, sw = e.scrollWidth;
+    if (sw > w + 0.5) { e.style.transformOrigin = '0 50%'; e.style.transform = `scaleX(${w / sw})`; }
+  });
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (current) fitText(current.el); });
+
+/* =========================================================
+   scroll helper (wheel + drag with momentum)
+   ========================================================= */
+function makeScroller(sc) {
+  let dragging = false, moved = false, lastY = 0, lastT = 0, vel = 0, raf = null, pid = null;
+  const scale = () => stage.getBoundingClientRect().height / H;
+  sc.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.pointerType !== 'mouse') return;
+    dragging = true; moved = false; lastY = e.clientY; lastT = performance.now(); vel = 0; pid = e.pointerId;
+    cancelAnimationFrame(raf);
+  });
+  window.addEventListener('pointermove', e => {
+    if (!dragging || e.pointerId !== pid) return;
+    const dy = (e.clientY - lastY) / scale();
+    if (!moved && Math.abs(dy) > 3) { moved = true; sc.classList.add('drag'); try { sc.setPointerCapture(pid); } catch (_) {} }
+    if (!moved) return;
+    const now = performance.now();
+    sc.scrollTop -= dy;
+    vel = -dy / Math.max(1, now - lastT) * 16;
+    lastY = e.clientY; lastT = now;
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false; sc.classList.remove('drag');
+    if (moved) {
+      const glide = () => { vel *= 0.94; sc.scrollTop += vel; if (Math.abs(vel) > 0.3) raf = requestAnimationFrame(glide); };
+      raf = requestAnimationFrame(glide);
+    }
+  };
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+  sc.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+}
+
+/* =========================================================
+   124 · Setting (scroll + toggles)
+   ========================================================= */
+{
+  const s = makeScreen('s124', null);
+  const KNOB = { on: '#E5DDDD', off: '#280606' };
+  const TOG = [
+    [78.1, true], [140.2, true], [252.3, true], [314.5, false],
+    [488.7, false], [550.8, true], [725, true, '#472525'], [787.1, true, '#472525'],
+  ];
+  const TOP = 113;
+  s.el.insertAdjacentHTML('beforeend', `
+    <div class="scroller"><div class="inner" style="height:${TOP + 1151}px">
+      <img src="img3/s124_content.png" alt="" style="position:absolute;left:0;top:${TOP}px;width:393px;height:534px;max-width:none">
+      <div class="card two" style="top:${TOP + 534.69}px"><span class="t">야간 모드</span><span class="sub" data-w="130">22:00 - 07:00 민감도 상승</span></div>
+      <div class="sec" style="top:${TOP + 614.8}px">Emergency</div>
+      <div class="card two" style="top:${TOP + 646.8}px"><span class="t">야간 모드</span><span class="sub">2명 등록됨</span>
+        <svg width="353" height="60" viewBox="0 32 353 60" fill="none" aria-hidden="true"><path d="M322.758 68.3316C322.508 68.3316 322.248 68.2316 322.058 68.0416C321.668 67.6516 321.658 67.0216 322.048 66.6316L326.228 62.3816C326.438 62.1616 326.438 61.8116 326.228 61.6016L322.048 57.3416C321.658 56.9516 321.668 56.3116 322.058 55.9316C322.448 55.5416 323.088 55.5516 323.468 55.9416L328.288 60.8416C328.908 61.4716 328.908 62.4916 328.288 63.1316L323.468 68.0316C323.268 68.2316 323.018 68.3316 322.758 68.3316Z" fill="#B5A4A4"/></svg></div>
+      <div class="card" style="top:${TOP + 709.1}px"><span class="t">자동 녹화</span></div>
+      <div class="card" style="top:${TOP + 771.2}px"><span class="t" data-w="133">클라우드 자동 업로드</span></div>
+    </div></div>
+    <img class="fixed" src="img3/s124_top.png" alt="" style="top:0;width:393px;height:115px">
+    <img class="fixed" src="img3/s124_bot.png" alt="" style="top:686px;width:393px;height:166px">
+    <div class="homebar"></div>`);
+  const inner = s.el.querySelector('.inner');
+  const sc = s.el.querySelector('.scroller');
+  makeScroller(sc);
+  const toggles = TOG.map(([y, on, knobColor]) => {
+    const b = el(`<button class="tg" type="button" role="switch" style="left:292.5px;top:${TOP + y}px"><i></i></button>`);
+    const k = b.querySelector('i');
+    const t = { b, init: on, on };
+    t.render = () => {
+      k.style.left = t.on ? '23px' : '2px';
+      k.style.background = knobColor || (t.on ? KNOB.on : KNOB.off);
+      b.setAttribute('aria-checked', t.on);
+    };
+    b.addEventListener('click', () => { t.on = !t.on; t.render(); });
+    inner.appendChild(b);
+    return t;
+  });
+  s.enter = () => { sc.scrollTop = 0; toggles.forEach(t => { t.on = t.init; t.render(); }); fitText(s.el); };
+  s.layer = s.el;
+  hotspot(s, 24, 69, 32, 32, 's1', 400, EASE.io, '뒤로');
+}
+
+/* =========================================================
+   v2 · shared state, chrome, sheet, toast
+   ========================================================= */
+const T0 = performance.now();
+const BASE = new Date(2027, 10, 19, 21, 41, 0).getTime();   // app clock: Fri 2027-11-19 21:41
+const appNow = () => BASE + (performance.now() - T0);
+const at = (mo, d, h, mi) => new Date(2027, mo - 1, d, h, mi).getTime();
+const pad = n => String(n).padStart(2, '0');
+const mmss = s => `${pad(Math.floor(s / 60))}:${pad(Math.floor(s % 60))}`;
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const WD_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MON_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const fmtTime = ms => { const d = new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtDate = ms => { const d = new Date(ms); return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`; };
+const fmtFull = ms => { const d = new Date(ms); return `${fmtDate(ms)} (${WD[d.getDay()]}) ${fmtTime(ms)}`; };
+const dayKey = ms => { const d = new Date(ms); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+const sameDay = (a, b) => dayKey(a) === dayKey(b);
+const fmtRel = ms => {
+  const m = Math.floor((appNow() - ms) / 60000);
+  if (m < 1) return '방금';
+  if (m < 60) return `${m}분 전`;
+  if (sameDay(ms, appNow())) return `${Math.floor(m / 60)}시간 전`;
+  const d = new Date(ms);
+  if (appNow() - ms < 7 * 864e5) return `${d.getMonth() + 1}.${d.getDate()} (${WD[d.getDay()]})`;
+  return fmtDate(ms);
+};
+const dayLabel = ms => {
+  if (sameDay(ms, appNow())) return '오늘';
+  if (sameDay(ms, appNow() - 864e5)) return '어제';
+  const d = new Date(ms); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${WD[d.getDay()]})`;
+};
+
+const ST = {
+  notifs: [
+    { id: 'n1', type: 'SYSTEM', at: at(11, 19, 21, 36), read: false, title: 'SCORP-02 연결 끊김', body: 'SCORP-02와 연결이 끊어졌습니다. 기기가 근처에 있는지 확인하세요.', meta: [['기기', 'SCORP-02'], ['마지막 연결', '21:35']], act: { label: '기기 설정 열기', go: 's124' } },
+    { id: 'n2', type: 'DETECT', at: at(11, 19, 21, 13), read: false, title: '이상 음향 감지 · 82dB', body: '반복적인 비명 주파수가 감지되어 자동 녹화를 시작했습니다.', meta: [['감지 강도', '82dB'], ['녹화', '01:32 · 42MB']], clip: 'c1' },
+    { id: 'n3', type: 'NOTICE', at: at(11, 19, 19, 40), read: false, title: '펌웨어 V2.1 적용', body: 'V2.1 업데이트로 새로운 감지 알고리즘이 적용되었습니다.', meta: [['버전', '3.1v → V2.1 알고리즘']] },
+    { id: 'n4', type: 'DETECT', at: at(11, 15, 23, 2), read: true, title: '후방 3m 접근 감지', body: '후방 3m 이내 접근이 감지되어 진동 경고를 보냈습니다.', meta: [['거리', '3.0m'], ['녹화', '02:08 · 58MB']], clip: 'c3' },
+    { id: 'n5', type: 'NOTICE', at: at(11, 15, 22, 10), read: true, title: '야간 감지 모드 전환', body: '주변 조도가 낮아 야간 감지 모드로 전환되었습니다.' },
+    { id: 'n6', type: 'DETECT', at: at(11, 12, 2, 16), read: true, title: '근접 경고 · 120dB', body: '근접 경고 감지, 0.8m 이내 120dB이 감지되었습니다.', meta: [['거리', '0.8m'], ['감지 강도', '120dB']], clip: 'c4' },
+    { id: 'n7', type: 'NOTICE', at: at(11, 5, 18, 20), read: true, title: '민감도 자동 조정', body: '주변 소음이 높아 오디오 감지 민감도가 조정되었습니다.', act: { label: '민감도 보기', go: 's127' } },
+    { id: 'n8', type: 'EMERGENCY', at: at(10, 11, 23, 48), read: true, title: '긴급 신고 완료', body: '긴급 신고 완료, 위치 및 영상이 전송되었습니다.', meta: [['접수번호', '1011-2207'], ['수신', '112 신고센터 · 엄마']], clip: 'e1' },
+    { id: 'n9', type: 'DETECT', at: at(10, 3, 1, 12), read: true, title: '장시간 정지 감지', body: '장시간 정지, 6시간 이상 움직임이 감지되지 않았습니다.' },
+    { id: 'n10', type: 'SYSTEM', at: at(10, 2, 9, 0), read: true, title: '센서 점검 완료', body: '센서 점검이 완료되었습니다. 모든 기능이 정상 작동합니다.' },
+  ],
+  clips: [
+    { id: 'c1', at: at(11, 19, 21, 13), dur: 92, type: 'AUTO', label: '이상 음향 감지', size: 42, v: 0 },
+    { id: 'c2', at: at(11, 19, 18, 5), dur: 45, type: 'MANUAL', label: '수동 녹화', size: 21, v: 3 },
+    { id: 'c3', at: at(11, 15, 23, 2), dur: 128, type: 'AUTO', label: '후방 접근 감지', size: 58, v: 1 },
+    { id: 'c4', at: at(11, 12, 2, 16), dur: 64, type: 'AUTO', label: '근접 경고', size: 30, v: 2 },
+    { id: 'c5', at: at(11, 8, 14, 23), dur: 210, type: 'MANUAL', label: '수동 녹화 · 4K', size: 96, v: 3, lock: true },
+    { id: 'c6', at: at(11, 3, 22, 41), dur: 37, type: 'AUTO', label: '이상 음향 감지', size: 17, v: 1 },
+    { id: 'e1', at: at(10, 11, 23, 48), dur: 180, type: 'SOS', label: '긴급 신고', size: 83, v: 2, lock: true },
+  ],
+  extra: [
+    { id: 'x1', type: 'DETECT', tag: 'DETECT', at: at(11, 8, 14, 22), title: '이상 음향 감지 · 82dB', body: '반복적인 고주파 음향이 감지되어 녹화를 권장했습니다.' },
+    { id: 'x2', type: 'DETECT', tag: 'ALERT', at: at(11, 8, 2, 16), title: '후방 3m 접근 감지', body: '후방 3m 이내 접근이 감지되었습니다.' },
+    { id: 'x3', type: 'DETECT', tag: 'ALERT', at: at(11, 3, 22, 40), title: '근접 경고 · 76dB', body: '1.2m 이내 접근과 76dB 음향이 함께 감지되었습니다.' },
+    { id: 'x4', type: 'DETECT', tag: 'ALERT', at: at(10, 20, 19, 5), title: '후방 5m 접근 감지', body: '후방 5m 이내 접근이 감지되었습니다.' },
+  ],
+  rec: { on: true, recStart: BASE - 23000, mode: 'live', clipId: null, t: 0, playing: false, filter: 'all', mic: true, quality: '4K' },
+};
+const clipById = id => ST.clips.find(c => c.id === id);
+const VAR = [
+  { f: 'none', flip: false, x: 0 },
+  { f: 'brightness(.78) saturate(.75) hue-rotate(-10deg)', flip: true, x: -6 },
+  { f: 'brightness(.62) contrast(1.18) saturate(.55)', flip: false, x: 8 },
+  { f: 'brightness(.92) sepia(.28) hue-rotate(-18deg)', flip: true, x: 4 },
+];
+const vf = v => VAR[v % VAR.length];
+
+/* icons */
+const SB_SVG = `<svg width="68" height="13" viewBox="0 0 68 13" fill="none" aria-hidden="true"><g fill="#EFE6E6"><rect x="0" y="8" width="3" height="4" rx=".7"/><rect x="4.6" y="6" width="3" height="6" rx=".7"/><rect x="9.2" y="3.6" width="3" height="8.4" rx=".7"/><rect x="13.8" y="1" width="3" height="11" rx=".7"/></g><path d="M28.6 3.2a8.4 8.4 0 0 1 5.9 2.4l1.1-1.1A10 10 0 0 0 28.6 1.6a10 10 0 0 0-7 2.9l1.1 1.1a8.4 8.4 0 0 1 5.9-2.4Zm0 3.2a5.2 5.2 0 0 1 3.6 1.5l1.1-1.1a6.8 6.8 0 0 0-9.5 0l1.1 1.1a5.2 5.2 0 0 1 3.7-1.5Zm0 3.1-1.5 1.5 1.5 1.5 1.5-1.5-1.5-1.5Z" fill="#EFE6E6"/><rect x="41.5" y=".5" width="23" height="12" rx="3.5" stroke="#EFE6E6" stroke-opacity=".4"/><rect x="43" y="2" width="20" height="9" rx="2" fill="#EFE6E6"/><path d="M66 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" fill="#EFE6E6" fill-opacity=".4"/></svg>`;
+const CHEV_L = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CHEV_R = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const DOTS_V = `<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="12" cy="5.5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18.5" r="1.6"/></g></svg>`;
+const ICO = {
+  shield: inner => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.8 19.2 5.6v5.6c0 4.6-3 8.3-7.2 10-4.2-1.7-7.2-5.4-7.2-10V5.6L12 2.8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>${inner}</svg>`,
+  DETECT: `<path d="m12 7.6 1.2 2.6 2.8.3-2.1 1.9.6 2.8L12 13.8l-2.5 1.4.6-2.8-2.1-1.9 2.8-.3L12 7.6Z" fill="currentColor"/>`,
+  NOTICE: `<path d="M12 8.2v6.4M8.8 11.4h6.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  EMERGENCY: `<path d="M12 7.6v4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="15" r="1.05" fill="currentColor"/>`,
+  SYSTEM: `<path d="M12 5.2v13.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>`,
+};
+const typeIcon = t => ICO.shield(ICO[t] || '');
+const I = {
+  phone: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 3.5h2.6l1.5 4-2 1.3a11 11 0 0 0 6.5 6.5l1.3-2 4 1.5v2.6a2 2 0 0 1-2.1 2A16.5 16.5 0 0 1 4.6 5.6a2 2 0 0 1 2-2.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+  person: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.6" stroke="currentColor" stroke-width="1.6"/><path d="M4.8 19.5c1.2-3.2 4-4.8 7.2-4.8s6 1.6 7.2 4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  badge: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 19 6v5.5c0 4.4-2.9 7.9-7 9.5-4.1-1.6-7-5.1-7-9.5V6l7-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  play: `<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></svg>`,
+  pause: `<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/><rect x="13.5" y="5.5" width="4" height="13" rx="1" fill="currentColor"/></svg>`,
+  replay: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12a7 7 0 1 0 2.1-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6.6 3.2v4.4H11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  stop: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="1.2" stroke="currentColor" stroke-width="1.6"/></svg>`,
+  recDot: `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6.5" fill="#C9372C"/></svg>`,
+  back10: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 12.5a6.5 6.5 0 1 0 2-4.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.6 4.5v3.6h3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><text x="12.4" y="15.3" text-anchor="middle" font-size="6.4" font-weight="700" font-family="Inter, sans-serif" fill="currentColor">10</text></svg>`,
+  fwd10: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 12.5a6.5 6.5 0 1 1-2-4.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M16.4 4.5v3.6h-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><text x="11.6" y="15.3" text-anchor="middle" font-size="6.4" font-weight="700" font-family="Inter, sans-serif" fill="currentColor">10</text></svg>`,
+  cam: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.4-2h5.8l1.4 2h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="12.8" r="3.3" stroke="currentColor" stroke-width="1.5"/></svg>`,
+  mic: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M5.8 11.5a6.2 6.2 0 0 0 12.4 0M12 17.7v2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  micOff: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M5.8 11.5a6.2 6.2 0 0 0 12.4 0M12 17.7v2.8M4.5 4.5l15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  filter: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  check: `<svg class="ck" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5.5 12.5 4.2 4.2 8.8-9.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  checkSm: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12.5 4.4 4.4L19 7.3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  lock: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7" stroke="currentColor" stroke-width="1.8"/></svg>`,
+  x: `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`,
+};
+
+const chrome = (title, o = {}) => `
+  <div class="x-sb">${o.noTime ? '' : '<span>9:41</span>'}${SB_SVG}</div>
+  <div class="x-hd">
+    ${o.back === false ? '' : `<button class="x-ib x-back" type="button" aria-label="뒤로">${CHEV_L}</button>`}
+    <div class="x-title${o.eyebrow ? ' eb' : ''}">${title}</div>
+    ${o.more ? `<button class="x-ib x-more" type="button" aria-label="더보기">${DOTS_V}</button>` : ''}
+  </div>`;
+const stageScale = () => stage.getBoundingClientRect().height / H;
+
+/* sheet */
+const ov = el(`<div class="x-ov" hidden><div class="x-scrim"></div><div class="x-sheet" role="dialog" aria-modal="true"></div></div>`);
+stage.appendChild(ov);
+const sheetPanel = ov.querySelector('.x-sheet');
+let sheetOnClose = null, sheetHideT = null;
+function openSheet(build, onClose) {
+  clearTimeout(sheetHideT);
+  sheetPanel.innerHTML = '';
+  sheetPanel.scrollTop = 0;
+  build(sheetPanel);
+  sheetOnClose = onClose || null;
+  ov.hidden = false;
+  void ov.offsetWidth;
+  ov.classList.add('on');
+}
+function closeSheet(instant) {
+  if (ov.hidden) return;
+  ov.classList.remove('on');
+  const f = sheetOnClose; sheetOnClose = null;
+  if (instant) ov.hidden = true;
+  else sheetHideT = setTimeout(() => { if (!ov.classList.contains('on')) ov.hidden = true; }, 300);
+  f && f();
+}
+ov.querySelector('.x-scrim').addEventListener('click', () => closeSheet());
+function actionSheet({ title, sub, items, cancel = '닫기', onClose }) {
+  openSheet(p => {
+    p.innerHTML = `<div class="x-grab"></div>${title ? `<div class="x-sh-t">${title}</div>` : ''}${sub ? `<div class="x-sh-s">${sub}</div>` : ''}<div class="x-sh-list"></div>${cancel ? `<button class="x-sh-cancel" type="button">${cancel}</button>` : ''}`;
+    const list = p.querySelector('.x-sh-list');
+    items.forEach(it => {
+      const b = el(`<button class="x-sh-item${it.danger ? ' danger' : ''}${it.primary ? ' primary' : ''}" type="button"><span class="lb">${it.label}${it.sub ? `<br><span class="sb">${it.sub}</span>` : ''}</span>${it.checked ? I.check : ''}</button>`);
+      b.addEventListener('click', () => { closeSheet(); it.on && it.on(); });
+      list.appendChild(b);
+    });
+    const c = p.querySelector('.x-sh-cancel'); if (c) c.addEventListener('click', () => closeSheet());
+  }, onClose);
+}
+
+/* toast */
+const toastEl = el(`<div class="x-toast" role="status" aria-live="polite"><span></span><button type="button" hidden></button></div>`);
+stage.appendChild(toastEl);
+let toastT = null;
+function toast(msg, action) {
+  const sp = toastEl.querySelector('span'), b = toastEl.querySelector('button');
+  sp.textContent = msg;
+  b.hidden = !action;
+  b.onclick = null;
+  if (action) { b.textContent = action.label; b.onclick = () => { hideToast(); action.on(); }; }
+  toastEl.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(hideToast, action ? 4200 : 2600);
+}
+function hideToast() { toastEl.classList.remove('on'); }
+
+/* history-aware back + close sheets on navigation */
+function back(fallback = 's1') { go((current && current.from) || fallback, 400, EASE.io, true); }
+GO_HOOKS.push(() => closeSheet(true));
+
+/* bell badges on the image screens */
+const unreadCount = () => ST.notifs.filter(n => !n.read).length;
+const bellDots = ['s1', 's126', 's127'].map(id => { const d = el(`<span class="x-badge" aria-hidden="true"></span>`); S[id].el.appendChild(d); return d; });
+function refreshBadges() { const u = unreadCount(); bellDots.forEach(d => d.hidden = u === 0); }
+refreshBadges();
+
+/* drag-to-scroll for mouse, with an axis lock so card swipes don't scroll */
+function dragScroll(sc) {
+  let on = false, moved = false, sx = 0, sy = 0, ly = 0, lt = 0, vel = 0, raf = null, pid = null;
+  sc.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.pointerType !== 'mouse') return;
+    on = true; moved = false; sx = e.clientX; sy = ly = e.clientY; lt = performance.now(); vel = 0; pid = e.pointerId;
+    cancelAnimationFrame(raf);
+  });
+  window.addEventListener('pointermove', e => {
+    if (!on || e.pointerId !== pid || sc.__lock) return;
+    const k = stageScale();
+    if (!moved) {
+      const dx = (e.clientX - sx) / k, dy = (e.clientY - sy) / k;
+      if (Math.abs(dy) > 6 && Math.abs(dy) > Math.abs(dx)) { moved = true; sc.classList.add('drag'); } else return;
+    }
+    const now = performance.now(), dy = (e.clientY - ly) / k;
+    sc.scrollTop -= dy; vel = -dy / Math.max(1, now - lt) * 16; ly = e.clientY; lt = now;
+  });
+  const end = () => {
+    if (!on) return; on = false; sc.classList.remove('drag');
+    if (moved) { const glide = () => { vel *= .94; sc.scrollTop += vel; if (Math.abs(vel) > .3) raf = requestAnimationFrame(glide); }; raf = requestAnimationFrame(glide); }
+  };
+  window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+  sc.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+}
+
+/* notification / event detail sheet (shared by 알림 and 달력) */
+function detailSheet(n, after) {
+  const meta = [['기기', 'SCORP-01'], ...(n.meta || [])];
+  const isSos = n.type === 'EMERGENCY';
+  openSheet(p => {
+    p.innerHTML = `<div class="x-grab"></div>
+      <div class="x-nd-top"><span class="x-tag${isSos ? ' sos' : ''}">${n.tag || n.type}</span><span class="x-nd-time">${fmtFull(n.at)}</span></div>
+      <div class="x-nd-title">${n.title}</div>
+      <div class="x-nd-body">${n.body}</div>
+      <dl class="x-meta">${meta.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      <div class="x-sh-acts"></div>`;
+    const acts = p.querySelector('.x-sh-acts');
+    const add = (label, cls, fn) => { const b = el(`<button type="button" class="${cls}">${label}</button>`); b.addEventListener('click', fn); acts.appendChild(b); };
+    if (n.clip && clipById(n.clip)) add('영상 보기', 'primary', () => openClip(n.clip));
+    else if (n.act) add(n.act.label, 'primary', () => go(n.act.go));
+    add('닫기', '', () => closeSheet());
+    if (acts.children.length === 1) acts.classList.add('one');
+  }, after);
+}
+
+/* open a clip in the record player from anywhere */
+function openClip(id) {
+  const R = ST.rec;
+  R.mode = 'play'; R.clipId = id; R.t = 0; R.playing = true;
+  if (current && current.id === 's120') { closeSheet(true); S.s120.render && S.s120.render(); return; }
+  go('s120');
+}
+
+/* =========================================================
+   4 · Emergency countdown (live)
+   ========================================================= */
+const RING_C = 2 * Math.PI * 132.5;
+const dialSVG = inner => `
+  <svg class="x-dial" style="left:54.3px;top:172.2px" width="286" height="286" viewBox="0 0 286 286" fill="none" aria-hidden="true">
+    <circle cx="142.916" cy="142.5" r="142.85" fill="url(#sgo)" fill-opacity="0.2"/>
+    <circle cx="142.916" cy="142.5" r="142.3" stroke="url(#rim)" stroke-width="1.1"/>
+    ${inner}
+    <circle cx="142.707" cy="9.78" r="1.5" fill="#B5A4A4"/><circle cx="142.5" cy="274.66" r="1.5" fill="#B5A4A4"/>
+    <circle cx="275.02" cy="142.9" r="1.5" fill="#B5A4A4"/><circle cx="9.98" cy="142.9" r="1.5" fill="#B5A4A4"/>
+  </svg>`;
+const INCIDENT = { start: 0, no: '', share0: 0 };
+{
+  const s = makeScreen('s4', null);
+  s.el.insertAdjacentHTML('beforeend', `
+    ${chrome('')}
+    ${dialSVG(`<circle cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".07" stroke-width="9"/>
+      <circle class="ring" cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".34" stroke-width="9" stroke-linecap="round" transform="rotate(-90 142.5 142.4)" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/>`)}
+    <div class="x-cdnum">5</div>
+    <div class="x-msg" style="top:482px"><b class="n">5</b>초 후 자동으로 신고됩니다</div>
+    <div class="x-rcpt" style="top:518px"><span class="x-pill">${I.badge}112 신고센터</span><span class="x-pill">${I.person}엄마</span></div>
+    <div class="x-sub" style="top:560px">현재 위치 · 실시간 영상 · 주변 음성이 함께 전송돼요</div>
+    <button class="x-btn-ghost now" type="button" style="left:105px;top:604px;width:184px;height:46px">지금 바로 신고</button>
+    <div class="x-cap" style="top:684px">취소하려면 PIN을 입력하세요</div>
+    <button class="x-btn cancel" type="button" style="left:105px;top:716px;width:184px;height:66px">Cancel</button>
+    <div class="homebar"></div>`);
+  const ring = s.el.querySelector('.ring'), num = s.el.querySelector('.x-cdnum'), msgN = s.el.querySelector('.x-msg .n');
+  let t0 = 0, raf = null, fired = false, shown = 5, cancelled = false;
+  const setNum = n => { if (n === shown) return; shown = n; num.textContent = n; msgN.textContent = n; num.classList.remove('tick'); void num.offsetWidth; num.classList.add('tick'); };
+  const fire = () => {
+    if (fired || cancelled) return; fired = true; cancelAnimationFrame(raf); closeSheet(true);
+    go('s5', 600, EASE.io);
+  };
+  const loop = now => {
+    const left = 5 - (now - t0) / 1000;
+    ring.style.strokeDashoffset = RING_C * (1 - Math.max(0, left) / 5);
+    setNum(Math.max(1, Math.ceil(left)));
+    if (left <= 0) return fire();
+    raf = requestAnimationFrame(loop);
+  };
+  s.enter = () => { fired = false; cancelled = false; shown = 5; num.textContent = 5; msgN.textContent = 5; ring.style.strokeDashoffset = 0; };
+  s.start = () => { t0 = performance.now(); raf = requestAnimationFrame(loop); };
+  s.leave = () => cancelAnimationFrame(raf);
+
+  let pinKey = null;
+  const openPin = () => {
+    let code = '';
+    openSheet(p => {
+      p.innerHTML = `<div class="x-grab"></div><div class="x-sh-t">PIN을 입력하면 신고가 취소돼요</div>
+        <div class="x-sh-s pin-hint">카운트다운은 계속 진행돼요 · 데모 PIN 1234</div>
+        <div class="x-pin-dots">${'<i></i>'.repeat(4)}</div>
+        <div class="x-pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '지우기'].map(k => `<button type="button" class="${k === '' ? 'nil' : k === '지우기' ? 'del' : ''}" data-k="${k}">${k}</button>`).join('')}</div>`;
+      const dots = p.querySelectorAll('.x-pin-dots i'), wrap = p.querySelector('.x-pin-dots'), hint = p.querySelector('.pin-hint');
+      const paint = () => dots.forEach((d, i) => d.classList.toggle('on', i < code.length));
+      const press = k => {
+        if (k === '지우기') { code = code.slice(0, -1); paint(); return; }
+        if (k === '' || code.length >= 4) return;
+        code += k; paint();
+        if (code.length === 4) setTimeout(() => {
+          if (code === '1234') {
+            cancelled = true; cancelAnimationFrame(raf); closeSheet(true);
+            go('s1', 400); toast('신고를 취소했어요');
+          } else {
+            wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+            hint.textContent = 'PIN이 일치하지 않아요. 다시 입력하세요';
+            code = ''; paint();
+          }
+        }, 140);
+      };
+      p.querySelectorAll('.x-pad button').forEach(b => b.addEventListener('click', () => press(b.dataset.k === '0' ? '0' : (b.dataset.k === '지우기' ? '지우기' : b.dataset.k))));
+      pinKey = e => { if (/^[0-9]$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('지우기'); };
+      window.addEventListener('keydown', pinKey);
+    }, () => { window.removeEventListener('keydown', pinKey); });
+  };
+  s.el.querySelector('.cancel').addEventListener('click', openPin);
+  s.el.querySelector('.x-back').addEventListener('click', openPin);
+  s.el.querySelector('.now').addEventListener('click', fire);
+}
+
+/* =========================================================
+   5 · Sending (step-by-step, pausable)
+   ========================================================= */
+{
+  const s = makeScreen('s5', null);
+  const STEPS = [
+    { label: '현재 위치 확인', a: 0, b: 700, done: '오차 8m' },
+    { label: '영상 · 음성 업로드', a: 700, b: 2900, prog: true, done: '12초 · 6MB' },
+    { label: '112 신고센터 전송', a: 2900, b: 3500, done: '접수됨' },
+    { label: '보호자(엄마) 전송', a: 3500, b: 4000, done: '전송됨' },
+  ];
+  const END = 4500;
+  s.el.insertAdjacentHTML('beforeend', `
+    ${chrome('', { back: false })}
+    ${dialSVG(`<circle cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".07" stroke-width="9"/>
+      <g class="x-rot"><circle cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".4" stroke-width="9" stroke-linecap="round" stroke-dasharray="150 ${RING_C - 150}" transform="rotate(-90 142.5 142.4)"/></g>`)}
+    <img class="x-glyph breathe" src="img3/glyph.png" alt="">
+    <div class="x-msg" style="top:482px">신고를 전송하고 있어요</div>
+    <ul class="x-steps" style="top:520px">${STEPS.map(st => `<li><span class="ic"></span><span>${st.label}</span><span class="r"></span></li>`).join('')}</ul>
+    <div class="x-cap" style="top:684px">이미 보낸 정보는 회수되지 않아요</div>
+    <button class="x-btn-ghost lg stop" type="button" style="left:105px;top:716px;width:184px;height:66px">전송 중단</button>
+    <div class="homebar"></div>`);
+  const lis = [...s.el.querySelectorAll('.x-steps li')];
+  let t = 0, last = 0, raf = null, paused = false, leaving = false;
+  const paint = () => {
+    STEPS.forEach((st, i) => {
+      const li = lis[i], r = li.querySelector('.r');
+      const state = t < st.a ? '' : t < st.b ? 'active' : 'done';
+      if (li.className !== state) li.className = state;
+      r.textContent = state === 'done' ? st.done : state === 'active' ? (st.prog ? `${Math.round((t - st.a) / (st.b - st.a) * 100)}%` : '') : '';
+    });
+  };
+  const loop = now => {
+    if (!paused) t += now - last; last = now;
+    paint();
+    if (t >= END && !leaving) { leaving = true; go('s6', 800, EASE.io); return; }
+    raf = requestAnimationFrame(loop);
+  };
+  s.enter = () => {
+    t = 0; paused = false; leaving = false; paint();
+    INCIDENT.start = appNow();
+    const d = new Date(INCIDENT.start);
+    INCIDENT.no = `${pad(d.getMonth() + 1)}${pad(d.getDate())}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    last = performance.now(); raf = requestAnimationFrame(loop);
+  };
+  s.leave = () => cancelAnimationFrame(raf);
+  s.el.querySelector('.stop').addEventListener('click', () => {
+    paused = true;
+    let stopped = false;
+    actionSheet({
+      title: '전송을 중단할까요?',
+      sub: t >= 700 ? '112 신고센터에는 현재 위치가 이미 전달됐어요. 중단하면 남은 정보는 보내지 않아요.' : '중단하면 아무 정보도 전송되지 않아요.',
+      items: [
+        { label: '계속 전송', primary: true },
+        { label: '전송 중단', danger: true, on: () => { stopped = true; go('s1', 400); toast(t >= 700 ? '전송을 중단했어요. 위치 정보만 전달됐어요' : '전송을 중단했어요'); } },
+      ],
+      cancel: null,
+      onClose: () => { setTimeout(() => { if (!stopped) paused = false; }, 0); },
+    });
+  });
+}
+
+/* =========================================================
+   6 · Sent → incident in progress, hold to end
+   ========================================================= */
+{
+  const s = makeScreen('s6', null);
+  s.el.insertAdjacentHTML('beforeend', `
+    ${chrome('', { back: false })}
+    ${dialSVG(`<circle cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".22" stroke-width="1"/>`)}
+    <img class="x-glyph" src="img3/glyph.png" alt="">
+    <div class="x-msg" style="top:476px">신고가 접수되었어요. 안전한 곳으로 이동하세요</div>
+    <div class="x-sub inc" style="top:500px"></div>
+    <div class="x-icard" style="top:530px">
+      <div class="x-irow"><span>112 신고센터</span><span class="st ok">${I.checkSm}수신 확인</span></div>
+      <div class="x-irow"><span>엄마</span><span class="st mom">전송됨</span></div>
+      <div class="x-irow"><span>실시간 위치 공유</span><span class="st"><i class="x-live-dot"></i><span class="share">00:00</span></span></div>
+    </div>
+    <button class="x-btn-ghost x-call c112" type="button" style="left:20px;top:658px;width:171px;height:44px">${I.phone}112 전화</button>
+    <button class="x-btn-ghost x-call cmom" type="button" style="left:202px;top:658px;width:171px;height:44px">${I.phone}엄마에게 전화</button>
+    <button class="x-btn x-hold" type="button" style="left:105px;top:716px;width:184px;height:66px" aria-label="길게 눌러 안전 확인"><i class="fill"></i><span>길게 눌러 안전 확인</span></button>
+    <div class="homebar"></div>`);
+  const inc = s.el.querySelector('.inc'), share = s.el.querySelector('.share'), mom = s.el.querySelector('.mom');
+  let raf = null;
+  const loop = () => { share.textContent = mmss((appNow() - INCIDENT.start) / 1000); raf = requestAnimationFrame(loop); };
+  s.enter = () => {
+    inc.textContent = `접수번호 ${INCIDENT.no} · ${fmtTime(INCIDENT.start)} 접수`;
+    mom.className = 'st mom'; mom.textContent = '전송됨';
+    raf = requestAnimationFrame(loop);
+  };
+  s.start = () => later(() => { mom.className = 'st mom ok'; mom.innerHTML = `${I.checkSm}읽음`; }, 2200);
+  s.leave = () => cancelAnimationFrame(raf);
+
+  const call = who => toast(`${who} 통화 화면으로 넘어가요 · 프로토타입이라 실제로 걸리지 않아요`);
+  s.el.querySelector('.c112').addEventListener('click', () => call('112'));
+  s.el.querySelector('.cmom').addEventListener('click', () => call('엄마'));
+
+  const finish = () => {
+    const shareSec = Math.round((appNow() - INCIDENT.start) / 1000);
+    const cid = 'sos' + Date.now();
+    ST.clips.unshift({ id: cid, at: INCIDENT.start, dur: 12, type: 'SOS', label: '긴급 신고', size: 6, v: 2, lock: true });
+    ST.notifs.unshift({ id: 'n' + Date.now(), type: 'EMERGENCY', at: INCIDENT.start, read: false, title: '긴급 신고 완료',
+      body: '긴급 신고 완료. 위치와 영상이 112 신고센터와 엄마에게 전송되었습니다.',
+      meta: [['접수번호', INCIDENT.no], ['수신', '112 신고센터 · 엄마'], ['위치 공유', mmss(shareSec)]], clip: cid });
+    refreshBadges();
+    go('s1', 600);
+    toast('신고를 종료했어요. 기록은 알림에서 볼 수 있어요');
+  };
+  const hold = s.el.querySelector('.x-hold'), fill = hold.querySelector('.fill');
+  let h0 = 0, hraf = null, holding = false;
+  const HOLD = 1200;
+  const hloop = now => {
+    const p = Math.min(1, (now - h0) / HOLD);
+    fill.style.transform = `scaleX(${p})`;
+    if (p >= 1) { holding = false; fill.style.transform = ''; finish(); return; }
+    hraf = requestAnimationFrame(hloop);
+  };
+  hold.addEventListener('pointerdown', e => { if (e.button !== 0) return; holding = true; h0 = performance.now(); fill.style.transition = 'none'; hraf = requestAnimationFrame(hloop); });
+  const release = () => {
+    if (!holding) return; holding = false; cancelAnimationFrame(hraf);
+    fill.style.transition = 'transform .25s ease'; fill.style.transform = 'scaleX(0)';
+    toast('버튼을 1초 이상 길게 눌러주세요');
+  };
+  hold.addEventListener('pointerup', release); hold.addEventListener('pointerleave', release); hold.addEventListener('pointercancel', release);
+  hold.addEventListener('click', e => { if (e.detail === 0) finish(); });
+}
+
+/* =========================================================
+   128 · Notifications (live list)
+   ========================================================= */
+{
+  const s = makeScreen('s128', null);
+  const CAT = { all: () => true, sos: n => n.type === 'EMERGENCY', detect: n => n.type === 'DETECT', system: n => n.type === 'NOTICE' || n.type === 'SYSTEM' };
+  const CAT_LB = [['all', '전체'], ['sos', '긴급'], ['detect', '감지'], ['system', '시스템']];
+  const EMPTY = { all: '알림이 없어요', sos: '긴급 알림이 없어요', detect: '감지 알림이 없어요', system: '시스템 알림이 없어요' };
+  let filter = 'all';
+  s.el.insertAdjacentHTML('beforeend', `
+    ${chrome('Notifications', { more: true })}
+    <div class="x-chips" style="top:120px"></div>
+    <div class="x-scroll" style="top:164px;bottom:0"><div class="list" style="padding-bottom:130px"></div></div>
+    <div class="x-fade-b"></div><div class="homebar"></div>`);
+  const chips = s.el.querySelector('.x-chips'), sc = s.el.querySelector('.x-scroll'), list = s.el.querySelector('.list');
+  dragScroll(sc);
+  const renderChips = () => {
+    chips.innerHTML = CAT_LB.map(([k, lb]) => `<button type="button" class="x-chip${k === filter ? ' on' : ''}" data-k="${k}">${lb}<em>${ST.notifs.filter(CAT[k]).length}</em></button>`).join('');
+    chips.querySelectorAll('.x-chip').forEach(b => b.addEventListener('click', () => { filter = b.dataset.k; render(); sc.scrollTop = 0; }));
+  };
+  const render = () => {
+    renderChips();
+    const items = ST.notifs.filter(CAT[filter]).sort((a, b) => b.at - a.at);
+    if (!items.length) { list.innerHTML = `<div class="x-empty"><b>${EMPTY[filter]}</b><span>감지·신고·기기 소식이 생기면 여기에 쌓여요</span></div>`; return; }
+    const now = appNow(), groups = [['오늘', []], ['지난 7일', []], ['이전', []]];
+    items.forEach(n => groups[sameDay(n.at, now) ? 0 : now - n.at < 7 * 864e5 ? 1 : 2][1].push(n));
+    list.innerHTML = groups.filter(g => g[1].length).map(([lb, ns]) => `<div class="x-sec">${lb}</div>` + ns.map(n => `
+      <div class="x-nwrap" data-id="${n.id}">
+        <button class="x-ndel" type="button" tabindex="-1">삭제</button>
+        <button class="x-ncard${n.read ? '' : ' unread'}" type="button">
+          <span class="ico" style="color:${n.type === 'EMERGENCY' ? '#F2A098' : 'var(--x-ink)'}">${typeIcon(n.type)}</span>
+          <span class="h${n.type === 'EMERGENCY' ? ' sos' : ''}">${n.type}</span>
+          <span class="tm">${n.read ? '' : '<i aria-label="읽지 않음"></i>'}${fmtRel(n.at)}</span>
+          <span class="b">${n.body}</span>
+        </button>
+      </div>`).join('')).join('');
+    list.querySelectorAll('.x-nwrap').forEach(bindCard);
+  };
+  const remove = (id) => {
+    const i = ST.notifs.findIndex(n => n.id === id); if (i < 0) return;
+    const [n] = ST.notifs.splice(i, 1);
+    render(); refreshBadges();
+    toast('알림을 삭제했어요', { label: '실행 취소', on: () => { ST.notifs.splice(i, 0, n); render(); refreshBadges(); } });
+  };
+  let openWrap = null;
+  const closeOpen = () => { if (openWrap) { const c = openWrap.querySelector('.x-ncard'); c.style.transition = 'transform .22s ease'; c.style.transform = ''; openWrap = null; } };
+  function bindCard(wrap) {
+    const card = wrap.querySelector('.x-ncard'), id = wrap.dataset.id;
+    let sx = null, sy = 0, dx = 0, base = 0, mode = null, pid = null, swiped = false;
+    card.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      sx = e.clientX; sy = e.clientY; mode = null; pid = e.pointerId; swiped = false;
+      base = openWrap === wrap ? -84 : 0; dx = base; card.style.transition = 'none';
+    });
+    card.addEventListener('pointermove', e => {
+      if (sx === null || e.pointerId !== pid) return;
+      const k = stageScale(), ddx = (e.clientX - sx) / k, ddy = (e.clientY - sy) / k;
+      if (!mode) {
+        if (Math.abs(ddx) > 8 && Math.abs(ddx) > Math.abs(ddy)) { mode = 'h'; sc.__lock = true; try { card.setPointerCapture(pid); } catch (_) {} if (openWrap && openWrap !== wrap) closeOpen(); }
+        else if (Math.abs(ddy) > 8) mode = 'v';
+      }
+      if (mode === 'h') { dx = Math.max(-150, Math.min(0, base + ddx)); card.style.transform = `translateX(${dx}px)`; }
+    });
+    const end = () => {
+      if (sx === null) return; sx = null; sc.__lock = false;
+      if (mode !== 'h') return;
+      swiped = true;
+      card.style.transition = 'transform .22s ease';
+      if (dx < -130) { card.style.transform = 'translateX(-105%)'; setTimeout(() => remove(id), 180); }
+      else if (dx < -42) { card.style.transform = 'translateX(-84px)'; openWrap = wrap; }
+      else { card.style.transform = ''; if (openWrap === wrap) openWrap = null; }
+    };
+    card.addEventListener('pointerup', end); card.addEventListener('pointercancel', end);
+    card.addEventListener('click', () => {
+      if (swiped) { swiped = false; return; }
+      if (openWrap) { closeOpen(); return; }
+      const n = ST.notifs.find(x => x.id === id); if (!n) return;
+      if (!n.read) { n.read = true; refreshBadges(); }
+      detailSheet(n, () => render());
+    });
+    wrap.querySelector('.x-ndel').addEventListener('click', () => { openWrap = null; remove(id); });
+  }
+  s.el.querySelector('.x-more').addEventListener('click', () => {
+    const u = unreadCount(), readN = ST.notifs.filter(n => n.read).length;
+    actionSheet({
+      items: [
+        { label: '모두 읽음으로 표시', sub: u ? `읽지 않은 알림 ${u}개` : '읽지 않은 알림이 없어요', on: () => { if (!u) return; ST.notifs.forEach(n => n.read = true); render(); refreshBadges(); toast('모두 읽음으로 표시했어요'); } },
+        { label: '읽은 알림 삭제', sub: `${readN}개`, danger: true, on: () => {
+          if (!readN) return toast('삭제할 읽은 알림이 없어요');
+          actionSheet({ title: `읽은 알림 ${readN}개를 삭제할까요?`, sub: '긴급 신고 기록은 녹화 영상에 계속 남아 있어요.', items: [
+            { label: '삭제', danger: true, on: () => { const keep = ST.notifs.filter(n => !n.read), old = ST.notifs.slice(); ST.notifs.length = 0; ST.notifs.push(...keep); render(); toast(`알림 ${readN}개를 삭제했어요`, { label: '실행 취소', on: () => { ST.notifs.length = 0; ST.notifs.push(...old); render(); } }); } },
+          ], cancel: '취소' });
+        } },
+        { label: '알림 설정', on: () => go('s124') },
+      ],
+    });
+  });
+  s.el.querySelector('.x-back').addEventListener('click', () => back('s1'));
+  s.enter = () => { openWrap = null; render(); sc.scrollTop = 0; };
+}
+
+/* =========================================================
+   123 · Calendar (live month grid)
+   ========================================================= */
+{
+  const s = makeScreen('s123', null);
+  const TODAY = new Date(BASE);
+  let vy = TODAY.getFullYear(), vm = TODAY.getMonth(), sel = new Date(BASE).setHours(0, 0, 0, 0);
+  s.el.insertAdjacentHTML('beforeend', `
+    ${chrome('Calendar', { more: true })}
+    <div class="x-cal-head" style="top:118px">
+      <div class="x-month"><span class="m"></span><span class="y"></span></div>
+      <div class="x-cal-nav"><button type="button" class="prev" aria-label="이전 달">${CHEV_L}</button><button type="button" class="next" aria-label="다음 달"><span style="transform:scaleX(-1);display:grid">${CHEV_L}</span></button></div>
+    </div>
+    <div class="x-cal-sum" style="top:166px"></div>
+    <div class="x-cal-wd" style="top:190px">${'SMTWTFS'.split('').map(c => `<span>${c}</span>`).join('')}</div>
+    <div class="x-cal-gw" style="top:218px;height:256px"><div class="x-cal-grid"></div></div>
+    <div class="x-dayhead" style="top:482px"><span class="d"></span><span class="w"></span><div class="x-cal-nav"><button type="button" class="pday" aria-label="이전 날">${CHEV_L}</button><button type="button" class="nday" aria-label="다음 날"><span style="transform:scaleX(-1);display:grid">${CHEV_L}</span></button></div></div>
+    <div class="x-scroll" style="top:530px;bottom:0"><div class="list" style="padding-bottom:120px"></div></div>
+    <div class="x-fade-b"></div><div class="homebar"></div>`);
+  const grid = s.el.querySelector('.x-cal-grid'), gw = s.el.querySelector('.x-cal-gw'), sum = s.el.querySelector('.x-cal-sum');
+  const list = s.el.querySelector('.list'), sc = s.el.querySelector('.x-scroll');
+  dragScroll(sc);
+
+  const allEvents = () => [
+    ...ST.notifs.filter(n => n.type === 'DETECT' || n.type === 'EMERGENCY').map(n => ({ tag: n.type === 'EMERGENCY' ? 'SOS' : 'DETECT', at: n.at, title: n.title, ref: n })),
+    ...ST.extra.map(x => ({ tag: x.tag, at: x.at, title: x.title, ref: x })),
+    ...ST.clips.map(c => ({ tag: c.type === 'SOS' ? 'SOS' : 'RECORD', at: c.at, title: `${c.type === 'SOS' ? '신고 영상' : c.label} · ${mmss(c.dur)}`, clip: c.id, rec: true })),
+  ];
+  const eventsOn = day => allEvents().filter(e => sameDay(e.at, day)).sort((a, b) => a.at - b.at);
+
+  const renderMonth = () => {
+    s.el.querySelector('.x-month .m').textContent = MON_EN[vm];
+    s.el.querySelector('.x-month .y').textContent = vy;
+    const evs = allEvents().filter(e => { const d = new Date(e.at); return d.getFullYear() === vy && d.getMonth() === vm; });
+    const c = k => evs.filter(e => k.includes(e.tag)).length;
+    sum.innerHTML = `<span><i class="x-dot DETECT"></i>감지 <b>${c(['DETECT', 'ALERT'])}</b></span><span><i class="x-dot RECORD"></i>녹화 <b>${c(['RECORD'])}</b></span><span><i class="x-dot SOS"></i>신고 <b>${evs.filter(e => e.tag === 'SOS' && !e.rec).length}</b></span>`;
+    const first = new Date(vy, vm, 1), days = new Date(vy, vm + 1, 0).getDate(), lead = first.getDay();
+    const todayKey = dayKey(BASE);
+    let h = '';
+    for (let i = 0; i < lead; i++) h += '<span></span>';
+    for (let d = 1; d <= days; d++) {
+      const ms = new Date(vy, vm, d).getTime();
+      const tags = ['SOS', 'DETECT', 'RECORD'].filter(t => evs.some(e => new Date(e.at).getDate() === d && (e.tag === t || (t === 'DETECT' && e.tag === 'ALERT'))));
+      const cls = ['x-day', (lead + d - 1) % 7 === 0 ? 'sun' : '', dayKey(ms) === todayKey ? 'today' : '', ms > BASE ? 'future' : '', sameDay(ms, sel) ? 'sel' : ''].join(' ');
+      h += `<button type="button" class="${cls}" data-d="${d}" aria-label="${vm + 1}월 ${d}일${tags.length ? ', 이벤트 있음' : ''}">${pad(d)}<span class="dots">${tags.slice(0, 3).map(t => `<i class="x-dot ${t}"></i>`).join('')}</span></button>`;
+    }
+    grid.innerHTML = h;
+    grid.style.gridTemplateRows = `repeat(${Math.ceil((lead + days) / 7)}, 42px)`;
+    grid.querySelectorAll('.x-day').forEach(b => b.addEventListener('click', () => { sel = new Date(vy, vm, +b.dataset.d).getTime(); renderMonth(); renderDay(); }));
+  };
+  const renderDay = () => {
+    const d = new Date(sel), evs = eventsOn(sel);
+    s.el.querySelector('.x-dayhead .d').textContent = pad(d.getDate());
+    s.el.querySelector('.x-dayhead .w').textContent = `${MON_EN[d.getMonth()]} · ${evs.length ? `${evs.length}개 이벤트` : '이벤트 없음'}`;
+    sc.scrollTop = 0;
+    if (!evs.length) {
+      list.innerHTML = `<div class="x-empty" style="padding-top:34px"><b>${sel > BASE ? '아직 오지 않은 날이에요' : '기록된 이벤트가 없어요'}</b><span>감지·녹화·신고가 생기면 날짜별로 여기에 모여요</span></div>`;
+      return;
+    }
+    list.innerHTML = evs.map((e, i) => `<button type="button" class="x-ev" data-i="${i}"><span class="x-tag${e.tag === 'SOS' ? ' sos' : ''}">${e.tag}</span><span class="t">${e.title}</span><span class="tm">${fmtTime(e.at)}</span></button>`).join('');
+    list.querySelectorAll('.x-ev').forEach(b => b.addEventListener('click', () => {
+      const e = evs[+b.dataset.i];
+      if (e.clip) return openClip(e.clip);
+      if (e.ref.read === false) { e.ref.read = true; refreshBadges(); }
+      detailSheet(e.ref);
+    }));
+  };
+  const shift = dir => {
+    grid.classList.add(dir > 0 ? 'out-l' : 'out-r');
+    setTimeout(() => {
+      vm += dir; if (vm < 0) { vm = 11; vy--; } if (vm > 11) { vm = 0; vy++; }
+      const inMonth = new Date(sel).getMonth() === vm && new Date(sel).getFullYear() === vy;
+      if (!inMonth) {
+        if (TODAY.getMonth() === vm && TODAY.getFullYear() === vy) sel = new Date(BASE).setHours(0, 0, 0, 0);
+        else {
+          const ev = allEvents().filter(e => { const d = new Date(e.at); return d.getFullYear() === vy && d.getMonth() === vm; }).sort((a, b) => b.at - a.at)[0];
+          sel = ev ? new Date(ev.at).setHours(0, 0, 0, 0) : new Date(vy, vm, 1).getTime();
+        }
+      }
+      renderMonth(); renderDay();
+      grid.classList.add('snap'); grid.classList.remove('out-l', 'out-r'); grid.classList.add(dir > 0 ? 'out-r' : 'out-l');
+      void grid.offsetWidth; grid.classList.remove('snap', 'out-l', 'out-r');
+    }, 170);
+  };
+  s.el.querySelector('.prev').addEventListener('click', () => shift(-1));
+  s.el.querySelector('.next').addEventListener('click', () => shift(1));
+  const goToday = () => { vy = TODAY.getFullYear(); vm = TODAY.getMonth(); sel = new Date(BASE).setHours(0, 0, 0, 0); renderMonth(); renderDay(); };
+  const stepDay = dir => {
+    const d = new Date(sel); d.setDate(d.getDate() + dir); sel = d.getTime();
+    vy = d.getFullYear(); vm = d.getMonth(); renderMonth(); renderDay();
+  };
+  s.el.querySelector('.pday').addEventListener('click', () => stepDay(-1));
+  s.el.querySelector('.nday').addEventListener('click', () => stepDay(1));
+  // swipe months
+  let gx = null, gy = 0, gpid = null;
+  gw.addEventListener('pointerdown', e => { gx = e.clientX; gy = e.clientY; gpid = e.pointerId; });
+  gw.addEventListener('pointerup', e => {
+    if (gx === null || e.pointerId !== gpid) return;
+    const k = stageScale(), dx = (e.clientX - gx) / k, dy = (e.clientY - gy) / k; gx = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) { gw.__swiped = true; shift(dx < 0 ? 1 : -1); setTimeout(() => gw.__swiped = false, 50); }
+  });
+  gw.addEventListener('click', e => { if (gw.__swiped) { e.stopPropagation(); e.preventDefault(); } }, true);
+  s.el.querySelector('.x-more').addEventListener('click', () => actionSheet({ items: [
+    { label: '오늘로 이동', on: goToday },
+    { label: '감지 민감도', sub: 'Level 화면에서 조정', on: () => go('s127') },
+    { label: '알림 설정', on: () => go('s124') },
+  ] }));
+  s.el.querySelector('.x-back').addEventListener('click', () => back('s127'));
+  s.enter = () => { renderMonth(); renderDay(); };
+}
+
+/* =========================================================
+   120 · Record (live view + playback + timeline)
+   ========================================================= */
+{
+  const s = makeScreen('s120', null);
+  const R = ST.rec;
+  const FILTERS = [['all', '전체'], ['AUTO', '자동 감지'], ['MANUAL', '수동 녹화'], ['SOS', '긴급 신고']];
+  s.el.insertAdjacentHTML('beforeend', `
+    ${chrome('Record', { more: true })}
+    <div class="x-player" style="left:20px;top:132px;width:353px;height:200px">
+      <div class="x-vid"><img src="img3/l120_cam.png" alt="" draggable="false"></div>
+      <canvas class="x-grain" width="118" height="67"></canvas>
+      <div class="x-flash"></div>
+      <i class="x-crn" style="left:9px;top:9px;border-left-width:1px;border-top-width:1px"></i>
+      <i class="x-crn" style="right:9px;top:9px;border-right-width:1px;border-top-width:1px"></i>
+      <i class="x-crn" style="left:9px;bottom:9px;border-left-width:1px;border-bottom-width:1px"></i>
+      <i class="x-crn" style="right:9px;bottom:9px;border-right-width:1px;border-bottom-width:1px"></i>
+      <div class="x-pb-tl"><i class="rd"></i><span class="lb"></span></div>
+      <span class="x-pb-tr q">4K</span>
+      <button class="x-pb-tr golive" type="button" hidden><i></i>LIVE</button>
+      <div class="x-pb-ts"></div>
+      <button class="x-pb-big" type="button" aria-label="다시 재생">${I.replay}</button>
+    </div>
+    <div class="x-scrub" style="top:344px"><div class="lbl"><span class="l"></span><span class="r"></span></div><div class="bar" role="slider" aria-label="재생 위치" tabindex="0"><i class="fill"></i><b class="knob"></b></div></div>
+    <button class="x-cbtn round b1" type="button" style="left:95px;top:391px"></button>
+    <button class="x-cbtn main b2" type="button" style="left:150.3px;top:389.85px"></button>
+    <button class="x-cbtn round b3" type="button" style="left:250px;top:391px"></button>
+    <div class="x-tlhead" style="top:470px"><span class="tt">Timeline</span><button type="button" class="fchip" hidden></button><button type="button" class="x-ib filt" aria-label="필터">${I.filter}</button></div>
+    <div class="x-scroll" style="top:512px;bottom:0"><div class="list" style="padding-bottom:130px"></div></div>
+    <div class="x-fade-b"></div><div class="homebar"></div>`);
+  const $ = q => s.el.querySelector(q);
+  const img = $('.x-vid img'), grain = $('.x-grain'), gctx = grain.getContext('2d');
+  const tlRd = $('.x-pb-tl .rd'), tlLb = $('.x-pb-tl .lb'), ts = $('.x-pb-ts'), q = $('.q'), goLive = $('.golive'), big = $('.x-pb-big');
+  const scrub = $('.x-scrub'), lblL = $('.x-scrub .l'), lblR = $('.x-scrub .r'), bar = $('.x-scrub .bar'), fillEl = $('.x-scrub .fill'), knob = $('.x-scrub .knob');
+  const b1 = $('.b1'), b2 = $('.b2'), b3 = $('.b3');
+  const list = $('.list'), sc = $('.x-scroll'), fchip = $('.fchip');
+  dragScroll(sc);
+  const clip = () => clipById(R.clipId);
+  const fmtStamp = ms => { const d = new Date(ms); return `${fmtDate(ms).replace(/\./g, '-')} · ${fmtTime(ms)}:${pad(d.getSeconds())}`; };
+
+  const renderControls = () => {
+    const live = R.mode === 'live';
+    scrub.classList.toggle('live', live);
+    q.hidden = !live; goLive.hidden = live;
+    if (live) {
+      b1.innerHTML = I.cam; b1.setAttribute('aria-label', '스냅샷');
+      b2.innerHTML = R.on ? I.stop : I.recDot; b2.setAttribute('aria-label', R.on ? '녹화 정지' : '녹화 시작');
+      b3.innerHTML = R.mic ? I.mic : I.micOff; b3.setAttribute('aria-label', R.mic ? '음성 녹음 끄기' : '음성 녹음 켜기');
+      b3.classList.toggle('off', !R.mic); b1.classList.remove('off');
+      q.textContent = R.quality;
+    } else {
+      b1.innerHTML = I.back10; b1.setAttribute('aria-label', '10초 뒤로');
+      b3.innerHTML = I.fwd10; b3.setAttribute('aria-label', '10초 앞으로'); b3.classList.remove('off');
+      const ended = R.t >= clip().dur;
+      b2.innerHTML = R.playing ? I.pause : ended ? I.replay : I.play; b2.setAttribute('aria-label', R.playing ? '일시정지' : '재생');
+    }
+    big.classList.toggle('show', !live && R.t >= (clip() || { dur: 1 }).dur && !R.playing);
+    const v = live ? { f: 'none', flip: false } : vf(clip().v);
+    img.style.filter = v.f;
+  };
+  const renderList = () => {
+    const items = ST.clips.filter(c => R.filter === 'all' || c.type === R.filter).sort((a, b) => b.at - a.at);
+    fchip.hidden = R.filter === 'all';
+    fchip.innerHTML = `${(FILTERS.find(f => f[0] === R.filter) || [])[1] || ''}${I.x}`;
+    if (!items.length) { list.innerHTML = `<div class="x-empty" style="padding-top:30px"><b>해당하는 영상이 없어요</b><span>필터를 바꾸거나 위에서 바로 녹화해 보세요</span></div>`; return; }
+    let lastDay = '', h = '';
+    items.forEach(c => {
+      const dk = dayKey(c.at);
+      if (dk !== lastDay) { lastDay = dk; h += `<div class="x-sec" style="padding-top:${h ? 14 : 4}px">${dayLabel(c.at)}</div>`; }
+      const v = vf(c.v), selc = R.mode === 'play' && R.clipId === c.id;
+      h += `<button type="button" class="x-clip${selc ? ' sel' : ''}" data-id="${c.id}">
+        <span class="th"><img src="img3/l120_cam.png" alt="" style="filter:${v.f};${v.flip ? 'transform:scaleX(-1);' : ''}object-position:${50 + v.x * 3}% 50%"><em>${mmss(c.dur)}</em></span>
+        <span><span class="t1">${c.label}${c.lock ? `<span style="color:var(--x-dim);display:inline-grid" aria-label="보호됨">${I.lock}</span>` : ''}${selc ? `<span class="x-eq${R.playing ? '' : ' pause'}"><i></i><i></i><i></i></span>` : ''}</span><span class="t2" style="display:block">${fmtTime(c.at)} · ${c.size}MB</span></span>
+        <span class="x-tag${c.type === 'SOS' ? ' sos' : ' ghost'}">${c.type}</span>
+      </button>`;
+    });
+    list.innerHTML = h;
+    list.querySelectorAll('.x-clip').forEach(b => b.addEventListener('click', () => {
+      const id = b.dataset.id;
+      if (R.mode === 'play' && R.clipId === id) { togglePlay(); return; }
+      R.mode = 'play'; R.clipId = id; R.t = 0; R.playing = true; renderAll();
+    }));
+  };
+  const renderAll = () => { if (R.mode === 'play' && !clip()) R.mode = 'live'; renderControls(); renderList(); paintFrame(true); };
+  s.render = renderAll;
+
+  const togglePlay = () => {
+    const c = clip(); if (!c) return;
+    if (R.t >= c.dur) R.t = 0;
+    R.playing = !R.playing; renderControls(); renderList();
+  };
+  const seek = sec => { const c = clip(); if (!c) return; R.t = Math.max(0, Math.min(c.dur, sec)); renderControls(); paintFrame(true); };
+
+  b1.addEventListener('click', () => {
+    if (R.mode === 'live') { const f = $('.x-flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); toast('스냅샷을 사진첩에 저장했어요'); }
+    else seek(R.t - 10);
+  });
+  b3.addEventListener('click', () => {
+    if (R.mode === 'live') { R.mic = !R.mic; renderControls(); toast(R.mic ? '주변 음성 녹음을 켰어요' : '주변 음성 녹음을 껐어요 · 영상만 저장돼요'); }
+    else seek(R.t + 10);
+  });
+  b2.addEventListener('click', () => {
+    if (R.mode !== 'live') return togglePlay();
+    if (R.on) {
+      const dur = Math.round((appNow() - R.recStart) / 1000);
+      R.on = false;
+      if (dur >= 1) {
+        const id = 'm' + Date.now();
+        ST.clips.unshift({ id, at: R.recStart, dur, type: 'MANUAL', label: '수동 녹화', size: Math.max(1, Math.round(dur * .46)), v: Math.floor(Math.random() * 4) });
+        renderAll();
+        toast(`녹화를 저장했어요 · ${mmss(dur)}`, { label: '보기', on: () => openClip(id) });
+      } else renderAll();
+    } else {
+      R.on = true; R.recStart = appNow(); renderAll(); toast('녹화를 시작했어요');
+    }
+  });
+  goLive.addEventListener('click', () => { R.mode = 'live'; R.playing = false; renderAll(); });
+  big.addEventListener('click', () => { R.t = 0; R.playing = true; renderAll(); });
+  $('.filt').addEventListener('click', () => actionSheet({
+    title: '영상 필터', items: FILTERS.map(([k, lb]) => ({ label: lb, sub: `${k === 'all' ? ST.clips.length : ST.clips.filter(c => c.type === k).length}개`, checked: R.filter === k, on: () => { R.filter = k; renderList(); sc.scrollTop = 0; } })),
+  }));
+  fchip.addEventListener('click', () => { R.filter = 'all'; renderList(); });
+
+  // scrubbing
+  let scrubbing = false, wasPlaying = false;
+  const seekFromEvent = e => { const r = bar.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * clip().dur); };
+  bar.addEventListener('pointerdown', e => { if (R.mode !== 'play') return; scrubbing = true; wasPlaying = R.playing; R.playing = false; try { bar.setPointerCapture(e.pointerId); } catch (_) {} seekFromEvent(e); });
+  bar.addEventListener('pointermove', e => { if (scrubbing) seekFromEvent(e); });
+  const endScrub = () => { if (!scrubbing) return; scrubbing = false; if (wasPlaying && R.t < clip().dur) R.playing = true; renderControls(); renderList(); };
+  bar.addEventListener('pointerup', endScrub); bar.addEventListener('pointercancel', endScrub);
+  bar.addEventListener('keydown', e => { if (R.mode !== 'play') return; if (e.key === 'ArrowRight') seek(R.t + 5); if (e.key === 'ArrowLeft') seek(R.t - 5); });
+
+  // ⋮ menu
+  $('.x-more').addEventListener('click', () => {
+    if (R.mode === 'live') return actionSheet({ title: '실시간 녹화', items: [
+      { label: `화질 · ${R.quality}`, sub: `탭하면 ${R.quality === '4K' ? '1080p' : '4K'}로 바꿔요`, on: () => { R.quality = R.quality === '4K' ? '1080p' : '4K'; renderControls(); toast(`화질을 ${R.quality}로 바꿨어요`); } },
+      { label: '녹화 설정', sub: '자동 녹화 · 클라우드 업로드', on: () => go('s124') },
+    ] });
+    const c = clip();
+    actionSheet({ title: c.label, sub: `${fmtFull(c.at)} · ${mmss(c.dur)} · ${c.size}MB`, items: [
+      { label: '공유 링크 복사', on: () => {
+        const txt = `SCORP-ON 영상 · ${fmtFull(c.at)} · ${c.label}`;
+        const ok = () => toast('공유 링크를 복사했어요');
+        try { navigator.clipboard.writeText(txt).then(ok, () => toast('복사하지 못했어요. 다시 시도해 주세요')); } catch (_) { toast('복사하지 못했어요. 다시 시도해 주세요'); }
+      } },
+      { label: '휴대폰에 저장', on: () => toast('휴대폰 사진첩에 저장했어요') },
+      { label: c.lock ? '보호 해제' : '영상 보호', sub: c.lock ? '자동 정리 대상에 다시 포함돼요' : '저장 공간이 부족해도 지워지지 않아요', on: () => { c.lock = !c.lock; renderList(); toast(c.lock ? '영상을 보호했어요' : '보호를 해제했어요'); } },
+      { label: '삭제', danger: true, on: () => {
+        if (c.lock) return toast('보호된 영상이에요. 보호를 해제한 뒤 삭제하세요');
+        actionSheet({ title: '이 영상을 삭제할까요?', sub: '클라우드에 올라간 사본도 함께 지워져요.', cancel: '취소', items: [
+          { label: '삭제', danger: true, on: () => {
+            const i = ST.clips.indexOf(c); ST.clips.splice(i, 1); R.mode = 'live'; R.playing = false; renderAll();
+            toast('영상을 삭제했어요', { label: '실행 취소', on: () => { ST.clips.splice(i, 0, c); renderAll(); } });
+          } },
+        ] });
+      } },
+    ] });
+  });
+  $('.x-back').addEventListener('click', () => back('s126'));
+
+  // frame loop: timecode, scrubber, fake motion + film grain
+  let raf = null, last = 0, gT = 0;
+  const noise = gctx.createImageData(118, 67);
+  const paintFrame = force => {
+    const live = R.mode === 'live', c = clip();
+    if (live) {
+      const el2 = R.on ? (appNow() - R.recStart) / 1000 : 0;
+      tlRd.className = 'rd' + (R.on ? ' blink' : ' off');
+      tlLb.textContent = R.on ? `REC ${mmss(el2)}` : 'STANDBY';
+      ts.textContent = fmtStamp(appNow());
+      lblL.innerHTML = `<span class="live"><i class="x-live-dot" style="width:6px;height:6px"></i>LIVE</span>`;
+      lblR.textContent = R.on ? mmss(el2) : '--:--';
+      const k = performance.now() / 1000;
+      img.style.transform = `translate(${Math.sin(k * .7) * 1.4}px, ${Math.cos(k * .9) * 1}px) scale(1.03)`;
+    } else if (c) {
+      tlRd.className = 'rd off';
+      tlLb.textContent = R.playing ? `PLAY · ${c.type}` : (R.t >= c.dur ? 'END' : 'PAUSED');
+      ts.textContent = fmtStamp(c.at + R.t * 1000);
+      lblL.textContent = mmss(R.t); lblR.textContent = mmss(c.dur);
+      const p = c.dur ? R.t / c.dur : 0, v = vf(c.v);
+      fillEl.style.width = `${p * 100}%`; knob.style.left = `${p * 100}%`;
+      bar.setAttribute('aria-valuenow', Math.round(R.t)); bar.setAttribute('aria-valuemax', c.dur);
+      img.style.transform = `translateX(${v.x - p * 14}px) scale(${1.04 + p * .05})${v.flip ? ' scaleX(-1)' : ''}`;
+    }
+  };
+  const loop = now => {
+    const dt = Math.min(.1, (now - last) / 1000); last = now;
+    const c = clip();
+    if (R.mode === 'play' && R.playing && c) {
+      R.t += dt;
+      if (R.t >= c.dur) { R.t = c.dur; R.playing = false; renderControls(); renderList(); }
+    }
+    paintFrame();
+    const moving = R.mode === 'live' || R.playing;
+    if (moving && now - gT > 70) {
+      gT = now;
+      const d = noise.data;
+      for (let i = 0; i < d.length; i += 4) { const g = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = g; d[i + 3] = Math.random() * 34; }
+      gctx.putImageData(noise, 0, 0);
+    }
+    raf = requestAnimationFrame(loop);
+  };
+  s.enter = () => { renderAll(); sc.scrollTop = 0; last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
+  s.leave = () => { cancelAnimationFrame(raf); if (R.mode === 'play') R.playing = false; };
+}
+
+/* ---------- boot ---------- */
+['s1','s2','s3','s126','s127_clean','s124_content','s124_top','s124_bot',
+ 'l2_vector','l2_scanning','l120_cam','l126_logo','l126_glow','r_wedge','r_dots','glyph']
+  .forEach(n => { const i = new Image(); i.src = `img3/${n}.png`; });
+window.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') {
+    busy = false; clearTimers();
+    if (current) { current.el.classList.remove('on'); current = null; }
+    go('s2', 0);
+  }
+});
+go('s2', 0);
+window.__proto = { go, get current() { return current && current.id; } };
+})();
+</script>
+
+</body></html>
