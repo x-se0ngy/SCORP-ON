@@ -62,6 +62,16 @@ body {
 .radar-sweep { transform-origin: 182.689px 177.554px; animation: sweep 1.72s linear infinite; }
 @keyframes sweep { to { transform: rotate(-360deg); } }
 
+/* home product : same float as HIN home (5s, alternate) */
+.float { position: absolute; max-width: none; pointer-events: none; will-change: transform; animation: x-float 5s linear infinite alternate; }
+@keyframes x-float {
+  0%      { transform: translateY(0);        animation-timing-function: ease-in-out; }
+  35.445% { transform: translateY(-20.7px);  animation-timing-function: linear; }
+  66.891% { transform: translateY(0);        animation-timing-function: linear; }
+  99.964% { transform: translateY(-12.47px); animation-timing-function: ease-in-out; }
+  100%    { transform: translateY(-20.7px); }
+}
+
 /* scroll screens */
 .scroller {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
@@ -383,9 +393,10 @@ button.x-pb-tr i { width: 6px; height: 6px; border-radius: 50%; background: var(
 (() => {
 const W = 393, H = 852;
 const EASE = {
-  io: 'cubic-bezier(.42,0,.58,1)',
-  slow: 'cubic-bezier(.22,.8,.3,1)',
+  io: 'cubic-bezier(.42,0,.58,1)',      // HIN · inout
+  slow: 'cubic-bezier(.45,0,.2,1)',     // HIN · slow (bottom-bar tabs)
 };
+const NAV_DUR = 1146;                   // HIN bottom-bar dissolve
 const stage = document.getElementById('stage');
 const holder = document.getElementById('holder');
 
@@ -460,11 +471,15 @@ function go(to, dur = 400, ease = EASE.io, isBack = false) {
    ========================================================= */
 {
   const s = makeScreen('s1', 's1.png');
+  // product lifted out of the screenshot so it can float (clean background patch + cut-out)
+  s.el.insertAdjacentHTML('beforeend',
+    `<img src="img3/s1_bgpatch.png" alt="" style="position:absolute;left:96px;top:180px;width:204px;height:254px;max-width:none;pointer-events:none">` +
+    `<img class="float" src="img3/s1_product.png" alt="" style="left:96px;top:180px;width:204px;height:254px">`);
   hotspot(s, 254, 498, 118, 41, 's2', 400, EASE.io, 'Bluetooth');
   hotspot(s, 299, 69, 32, 32, 's128', 400, EASE.io, '알림');
   hotspot(s, 337, 69, 32, 32, 's124', 400, EASE.io, '설정');
-  hotspot(s, 151, 754, 32, 32, 's126', 1250, EASE.slow, 'Scan');
-  hotspot(s, 203, 754, 32, 32, 's127', 1250, EASE.slow, 'Level');
+  hotspot(s, 151, 754, 32, 32, 's126', NAV_DUR, EASE.slow, 'Scan');
+  hotspot(s, 203, 754, 32, 32, 's127', NAV_DUR, EASE.slow, 'Level');
   hotspot(s, 313, 740, 60, 60, 's4', 400, EASE.io, '긴급 신고');
 }
 
@@ -490,7 +505,7 @@ function go(to, dur = 400, ease = EASE.io, isBack = false) {
     };
     later(step, 300);
   };
-  s.auto = { after: 3000, to: 's3', dur: 1000, ease: EASE.io };
+  s.auto = { after: 1700, to: 's3', dur: 350, ease: EASE.io };   // HIN loading: hold 1.7s → 350ms dissolve
   hotspot(s, 24, 60, 43, 51, 's1', 400, EASE.io, '뒤로');
 }
 
@@ -532,8 +547,8 @@ function go(to, dur = 400, ease = EASE.io, isBack = false) {
   hotspot(s, 299, 69, 32, 32, 's128', 400, EASE.io, '알림');
   hotspot(s, 337, 69, 32, 32, 's124', 400, EASE.io, '설정');
   hotspot(s, 313, 740, 60, 60, 's4', 400, EASE.io, '긴급 신고');
-  hotspot(s, 202, 754, 32, 32, 's127', 1250, EASE.slow, 'Level');
-  hotspot(s, 40, 754, 32, 32, 's1', 1250, EASE.slow, 'Home');
+  hotspot(s, 202, 754, 32, 32, 's127', NAV_DUR, EASE.slow, 'Level');
+  hotspot(s, 40, 754, 32, 32, 's1', NAV_DUR, EASE.slow, 'Home');
 }
 
 /* =========================================================
@@ -619,8 +634,8 @@ function go(to, dur = 400, ease = EASE.io, isBack = false) {
   hotspot(s, 299, 69, 32, 32, 's128', 400, EASE.io, '알림');
   hotspot(s, 337, 69, 32, 32, 's124', 400, EASE.io, '설정');
   hotspot(s, 313, 740, 60, 60, 's4', 400, EASE.io, '긴급 신고');
-  hotspot(s, 40, 754, 32, 32, 's1', 1250, EASE.slow, 'Home');
-  hotspot(s, 92, 754, 32, 32, 's126', 1250, EASE.slow, 'Scan');
+  hotspot(s, 40, 754, 32, 32, 's1', NAV_DUR, EASE.slow, 'Home');
+  hotspot(s, 92, 754, 32, 32, 's126', NAV_DUR, EASE.slow, 'Scan');
 }
 
 /* keep rebuilt text within the width it has in Figma */
@@ -1569,7 +1584,7 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
 }
 
 /* ---------- boot ---------- */
-['s1','s2','s3','s126','s127_clean','s124_content','s124_top','s124_bot',
+['s1','s1_bgpatch','s1_product','s2','s3','s126','s127_clean','s124_content','s124_top','s124_bot',
  'l2_vector','l2_scanning','l120_cam','l126_logo','l126_glow','r_wedge','r_dots','glyph']
   .forEach(n => { const i = new Image(); i.src = `img3/${n}.png`; });
 window.addEventListener('keydown', e => {
@@ -1579,6 +1594,35 @@ window.addEventListener('keydown', e => {
     go('s2', 0);
   }
 });
+
+/* ---------- exhibition mode ----------
+   no touch for IDLE_MS → dissolve back to Home (same as HIN),
+   and the demo data (알림 읽음·삭제, 영상, 녹화 상태) returns to its first state */
+const IDLE_MS = 60000;
+const ST_INIT = JSON.stringify(ST);
+function resetState() {
+  const o = JSON.parse(ST_INIT);
+  for (const k in o) {
+    if (Array.isArray(o[k])) ST[k].splice(0, ST[k].length, ...o[k]);
+    else { for (const kk in ST[k]) delete ST[k][kk]; Object.assign(ST[k], o[k]); }
+  }
+  refreshBadges();
+}
+let idleTimer = null;
+function armIdle() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    if (current && current.id !== 's1') {
+      closeSheet(true); hideToast();
+      go('s1', NAV_DUR, EASE.slow, true);
+      setTimeout(resetState, NAV_DUR + 60);   // after the dissolve, so the leaving screen doesn't jump
+    }
+    armIdle();
+  }, IDLE_MS);
+}
+['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev => window.addEventListener(ev, armIdle, { passive: true, capture: true }));
+armIdle();
+
 go('s2', 0);
 window.__proto = { go, get current() { return current && current.id; } };
 })();
