@@ -180,7 +180,7 @@ button:focus-visible { outline: none; }
 .x-pulse.slow i { animation-duration: 3.4s; border-color: rgba(222,195,198,.22); }
 .x-pulse.slow i:nth-child(2) { animation-delay: 1.7s; }
 @keyframes x-pulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.32); opacity: 0; } }
-.x-cdnum { position: absolute; left: 54.3px; top: 148.2px; width: 286px; height: 286px; display: grid; place-items: center; font: 300 124px/1 var(--x-num); letter-spacing: -.05em; color: var(--x-ink); font-variant-numeric: tabular-nums; pointer-events: none; }
+.x-cdnum { position: absolute; left: 54.3px; top: 148.2px; width: 286px; height: 286px; display: grid; place-items: center; font: 400 124px/1 var(--x-num); letter-spacing: -.05em; color: var(--x-ink); font-variant-numeric: tabular-nums; pointer-events: none; }
 .x-cdnum.tick { animation: x-tick .45s cubic-bezier(.22,.8,.3,1); }
 @keyframes x-tick { from { opacity: .25; transform: scale(.9); } to { opacity: 1; transform: none; } }
 .x-glyph { position: absolute; left: 171.7px; top: 261.6px; width: 51.3px; height: 59.3px; max-width: none; pointer-events: none; }
@@ -215,10 +215,27 @@ button:focus-visible { outline: none; }
 .x-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--x-sos); animation: x-blink 1.2s steps(1) infinite; }
 @keyframes x-blink { 50% { opacity: .2; } }
 .x-call { display: grid; place-items: center; padding: 0; background: transparent !important; border: 0 !important; line-height: 1;
-  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; text-decoration-color: rgba(222,195,198,.55); }
+}
+.x-call .u { display: inline-block; padding-bottom: 4px; border-bottom: 1px solid rgba(222,195,198,.6); line-height: 1; }
 .x-hold { overflow: hidden; }
 .x-hold .fill { position: absolute; inset: 0; background: #E9DCDC; transform-origin: 0 50%; transform: scaleX(0); }
 .x-hold span { position: relative; font: 500 16px/1 var(--x-kr); }
+
+
+/* call screen */
+.x-callov { position: absolute; inset: 0; z-index: 66; background: linear-gradient(180deg, #2F0606, #000 78%); opacity: 0; transition: opacity .4s cubic-bezier(.42,0,.58,1); }
+.x-callov.on { opacity: 1; }
+.x-callov .cv-lb { position: absolute; left: 0; width: 393px; top: 132px; text-align: center; font: 300 14px/20px var(--x-kr); color: var(--x-dim); }
+.x-callov .cv-name { position: absolute; left: 0; width: 393px; top: 156px; text-align: center; font: 600 34px/42px var(--x-kr); color: var(--x-ink-hi); }
+.x-callov .cv-st { position: absolute; left: 0; width: 393px; top: 204px; text-align: center; font: 300 16px/22px var(--x-kr); color: var(--x-ink); font-variant-numeric: tabular-nums; }
+.x-callov .cv-av { position: absolute; left: 136.5px; top: 290px; width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center; color: var(--x-ink-hi);
+  background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.16), rgba(181,164,164,.06) 60%, rgba(222,195,198,.12)); box-shadow: inset 0 0 0 .6px rgba(255,255,255,.28); }
+.x-callov .cv-ctl { position: absolute; left: 56px; width: 281px; top: 560px; display: flex; justify-content: space-between; }
+.x-callov .cv-b { width: 72px; display: grid; justify-items: center; gap: 8px; padding: 0; border: 0; background: transparent; color: var(--x-ink-hi); font: 300 12px/1 var(--x-kr); cursor: pointer; }
+.x-callov .cv-b i { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: rgba(181,164,164,.14); box-shadow: inset 0 0 0 .6px rgba(255,255,255,.2); transition: background-color .3s cubic-bezier(.42,0,.58,1), color .3s; }
+.x-callov .cv-b.on i { background: var(--x-btn); color: var(--x-btn-ink); }
+.x-callov .cv-end { position: absolute; left: 160.5px; top: 700px; width: 72px; height: 72px; border-radius: 50%; border: 0; padding: 0; background: var(--x-sos); color: #fff; display: grid; place-items: center; cursor: pointer; transition: transform .12s ease; }
+.x-callov .cv-end:active { transform: scale(.94); }
 
 /* overlay: sheet + toast */
 .x-ov { position: absolute; inset: 0; z-index: 60; }
@@ -248,7 +265,7 @@ button:focus-visible { outline: none; }
 .x-pad button:active { background: var(--x-card-hi); }
 .x-pad button.nil { visibility: hidden; }
 .x-pad button.del { font-size: 15px; font-family: var(--x-kr); background: transparent; }
-.x-toast { position: absolute; left: 50%; top: 62px; z-index: 70; display: flex; align-items: center; gap: 14px; max-width: 333px; width: max-content; padding: 12px 16px; box-sizing: border-box; border-radius: 4px; background: rgba(228,214,214,.72); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #2A0A0A; white-space: pre-line; font: 500 13px/18px var(--x-kr); transform: translate(-50%, -10px); opacity: 0; pointer-events: none; transition: opacity .22s ease, transform .3s cubic-bezier(.22,.8,.3,1); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.x-toast { position: absolute; left: 50%; top: 62px; z-index: 70; display: flex; align-items: center; justify-content: center; text-align: center; gap: 14px; max-width: 333px; width: max-content; padding: 12px 16px; box-sizing: border-box; border-radius: 4px; background: rgba(228,214,214,.72); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #2A0A0A; white-space: pre-line; font: 500 13px/18px var(--x-kr); transform: translate(-50%, -10px); opacity: 0; pointer-events: none; transition: opacity .22s ease, transform .3s cubic-bezier(.22,.8,.3,1); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
 .x-toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .x-toast button { flex: none; border: 0; background: transparent; padding: 0; color: #7A1E16; font: 600 13px/18px var(--x-kr); cursor: pointer; }
 .x-badge { position: absolute; left: 318.5px; top: 71px; width: 9px; height: 9px; border-radius: 50%; background: var(--x-sos); box-shadow: 0 0 0 2px #2A0606; z-index: 21; pointer-events: none; }
@@ -258,7 +275,7 @@ button:focus-visible { outline: none; }
 .x-scroll::-webkit-scrollbar { display: none; }
 .x-fade-b { position: absolute; left: 0; bottom: 0; width: 393px; height: 120px; pointer-events: none; z-index: 5; background: linear-gradient(180deg, rgba(0,0,0,0), #000 82%); }
 .x-sec { padding: 18px 22px 8px; font: 500 12px/1 var(--x-kr); letter-spacing: .04em; color: var(--x-dim); }
-.x-tag { display: inline-grid; place-items: center; height: 20px; padding: 0 7px; border-radius: 3px; background: var(--x-btn); color: var(--x-btn-ink); font: 700 10px/1 var(--x-title); letter-spacing: .1em; }
+.x-tag { display: inline-grid; place-items: center; height: 20px; padding: 0 7px; border-radius: 3px; background: var(--x-btn); color: var(--x-btn-ink); font: 600 10.5px/1 var(--x-kr); letter-spacing: .06em; }
 .x-tag.sos { background: var(--x-sos); color: #fff; }
 .x-tag.ghost { background: transparent; color: var(--x-ink); box-shadow: inset 0 0 0 1px var(--x-faint); }
 .x-empty { padding: 60px 40px; text-align: center; }
@@ -343,14 +360,14 @@ button:focus-visible { outline: none; }
 .x-flash.go { animation: x-flash .35s ease-out; }
 @keyframes x-flash { 0% { opacity: .85; } 100% { opacity: 0; } }
 .x-crn { position: absolute; width: 18px; height: 18px; border-color: rgba(236,226,226,.75); border-style: solid; border-width: 0; pointer-events: none; }
-.x-pb-tl { position: absolute; left: 14px; top: 12px; display: flex; align-items: center; gap: 6px; font: 600 11px/1 var(--x-num); letter-spacing: .06em; color: #F4ECEC; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.x-pb-tl { position: absolute; left: 14px; top: 12px; display: flex; align-items: center; gap: 6px; font: 600 11.5px/1 var(--x-kr); letter-spacing: .04em; color: #F4ECEC; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .x-pb-tl .rd { width: 6px; height: 6px; border-radius: 50%; background: var(--x-sos); }
 .x-pb-tl .rd.blink { animation: x-blink 1s steps(1) infinite; }
 .x-pb-tl .rd.off { background: #9C8E8E; }
-.x-pb-tr { position: absolute; right: 12px; top: 10px; height: 18px; padding: 0 6px; border-radius: 2px; border: 1px solid rgba(236,226,226,.7); background: transparent; color: #F4ECEC; font: 600 10px/16px var(--x-num); letter-spacing: .06em; }
+.x-pb-tr { position: absolute; right: 12px; top: 10px; height: 18px; padding: 0 6px; border-radius: 2px; border: 1px solid rgba(236,226,226,.7); background: transparent; color: #F4ECEC; font: 600 10.5px/16px var(--x-kr); letter-spacing: .04em; }
 button.x-pb-tr { cursor: pointer; height: 22px; padding: 0 8px; background: rgba(0,0,0,.35); display: inline-flex; align-items: center; gap: 5px; }
 button.x-pb-tr i { width: 6px; height: 6px; border-radius: 50%; background: var(--x-sos); }
-.x-pb-ts { position: absolute; left: 14px; bottom: 11px; font: 500 12px/1 var(--x-num); color: #F4ECEC; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
+.x-pb-ts { position: absolute; left: 14px; bottom: 11px; font: 500 12.5px/1 var(--x-kr); color: #F4ECEC; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
 .x-pb-big { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; border: 0; background: rgba(0,0,0,.45); color: #F4ECEC; display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
 .x-pb-big.show { opacity: 1; pointer-events: auto; }
 .x-scrub { position: absolute; left: 20px; width: 353px; }
@@ -391,7 +408,7 @@ button.x-pb-tr i { width: 6px; height: 6px; border-radius: 50%; background: var(
 }
 </style>
 
-<div id="wrap"><div id="holder"><div id="stage" role="application" aria-label="SCORP-ON 앱 프로토타입"></div></div></div>
+<div id="wrap"><div id="holder"><div id="stage" role="application" aria-label="SCORP-ON"></div></div></div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
@@ -905,6 +922,49 @@ function hideToast() { toastEl.classList.remove('on'); }
 /* history-aware back + close sheets on navigation */
 function back(fallback = 's1') { go((current && current.from) || fallback, 400, EASE.io, true); }
 GO_HOOKS.push(() => closeSheet(true));
+/* call screen (looks and runs like a real call; nothing is dialed) */
+const SVG_MUTE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M5.8 11.5a6.2 6.2 0 0 0 12.4 0M12 17.7v2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const SVG_PAD = `<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor">${[5, 12, 19].map(y => [6, 12, 18].map(x => `<circle cx="${x}" cy="${y}" r="1.6"/>`).join('')).join('')}</g></svg>`;
+const SVG_SPK = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+const SVG_END = `<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.2 13.6c4.9-4 12.7-4 17.6 0l-1.9 2.6-3.6-1.2-.4-2.4a10.6 10.6 0 0 0-5.8 0l-.4 2.4-3.6 1.2-1.9-2.6Z" fill="currentColor"/></svg>`;
+const callEl = el(`<div class="x-callov" hidden role="dialog" aria-label="통화">
+  <div class="x-sb"><span>9:41</span>${SB_SVG}</div>
+  <div class="cv-lb"></div><div class="cv-name"></div><div class="cv-st"></div>
+  <div class="cv-av">${I.person.replace('width="14" height="14"', 'width="44" height="44"')}</div>
+  <div class="cv-ctl">
+    <button type="button" class="cv-b"><i>${SVG_MUTE}</i>소리 끔</button>
+    <button type="button" class="cv-b"><i>${SVG_PAD}</i>키패드</button>
+    <button type="button" class="cv-b"><i>${SVG_SPK}</i>스피커</button>
+  </div>
+  <button type="button" class="cv-end" aria-label="통화 종료">${SVG_END}</button>
+  <div class="homebar"></div>
+</div>`);
+stage.appendChild(callEl);
+callEl.querySelectorAll('.cv-b').forEach(b => b.addEventListener('click', () => b.classList.toggle('on')));
+let callT = null, callRaf = null, callHide = null;
+function openCall(name, label) {
+  clearTimeout(callT); clearTimeout(callHide); cancelAnimationFrame(callRaf); hideToast();
+  callEl.querySelector('.cv-lb').textContent = label;
+  callEl.querySelector('.cv-name').textContent = name;
+  const st = callEl.querySelector('.cv-st'); st.textContent = '연결 중…';
+  callEl.querySelectorAll('.cv-b').forEach(b => b.classList.remove('on'));
+  callEl.hidden = false; void callEl.offsetWidth; callEl.classList.add('on');
+  callT = setTimeout(() => {
+    const t0 = performance.now();
+    const tick = () => { st.textContent = mmss((performance.now() - t0) / 1000); callRaf = requestAnimationFrame(tick); };
+    tick();
+  }, 1800);
+}
+function closeCall(instant) {
+  if (callEl.hidden) return;
+  clearTimeout(callT); cancelAnimationFrame(callRaf);
+  if (instant) { callEl.classList.remove('on'); callEl.hidden = true; return; }
+  callEl.querySelector('.cv-st').textContent = '통화 종료';
+  callHide = setTimeout(() => { callEl.classList.remove('on'); callHide = setTimeout(() => { callEl.hidden = true; }, 420); }, 600);
+}
+callEl.querySelector('.cv-end').addEventListener('click', () => closeCall());
+GO_HOOKS.push(() => closeCall(true));
+
 
 /* bell badges on the image screens */
 const unreadCount = () => ST.notifs.filter(n => !n.read).length;
@@ -988,7 +1048,7 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
     <div class="x-cdnum">5</div>
     <div class="x-msg" style="top:474px"><b class="n">5</b>초 후 자동으로 신고됩니다.</div>
     <div class="x-sub" style="top:497px">112와 엄마에게 위치·영상·음성이 전송돼요.</div>
-    <button class="x-btn-ghost x-call now" type="button" style="left:105px;top:656px;width:184px;height:44px">지금 바로 신고</button>
+    <button class="x-btn-ghost x-call now" type="button" style="left:105px;top:656px;width:184px;height:44px"><span class="u">지금 바로 신고</span></button>
     <button class="x-btn cancel" type="button" style="left:105px;top:716px;width:184px;height:66px">Cancel</button>
     <div class="homebar"></div>`);
   const ring = s.el.querySelector('.ring'), num = s.el.querySelector('.x-cdnum'), msgN = s.el.querySelector('.x-msg .n');
@@ -1014,7 +1074,7 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
     let code = '';
     openSheet(p => {
       p.innerHTML = `<div class="x-grab"></div><div class="x-sh-t">PIN을 입력하면 신고가 취소돼요.</div>
-        <div class="x-sh-s pin-hint">카운트다운은 계속 진행돼요. 데모 PIN은 1234예요.</div>
+        <div class="x-sh-s pin-hint">카운트다운은 계속 진행돼요.</div>
         <div class="x-pin-dots">${'<i></i>'.repeat(4)}</div>
         <div class="x-pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '지우기'].map(k => `<button type="button" class="${k === '' ? 'nil' : k === '지우기' ? 'del' : ''}" data-k="${k}">${k}</button>`).join('')}</div>`;
       const dots = p.querySelectorAll('.x-pin-dots i'), wrap = p.querySelector('.x-pin-dots'), hint = p.querySelector('.pin-hint');
@@ -1122,8 +1182,8 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
       <div class="x-irow"><span>엄마</span><span class="st mom">전송됨</span></div>
       <div class="x-irow"><span>실시간 위치 공유</span><span class="st"><i class="x-live-dot"></i><span class="share">00:00</span></span></div>
     </div>
-    <button class="x-btn-ghost x-call c112" type="button" style="left:20px;top:656px;width:171px;height:44px">112 전화</button>
-    <button class="x-btn-ghost x-call cmom" type="button" style="left:202px;top:656px;width:171px;height:44px">엄마에게 전화</button>
+    <button class="x-btn-ghost x-call c112" type="button" style="left:20px;top:656px;width:171px;height:44px"><span class="u">112 전화</span></button>
+    <button class="x-btn-ghost x-call cmom" type="button" style="left:202px;top:656px;width:171px;height:44px"><span class="u">엄마에게 전화</span></button>
     <button class="x-btn x-hold" type="button" style="left:105px;top:716px;width:184px;height:66px" aria-label="길게 눌러 안전 확인"><i class="fill"></i><span>길게 눌러 안전 확인</span></button>
     <div class="homebar"></div>`);
   const inc = s.el.querySelector('.inc'), share = s.el.querySelector('.share'), mom = s.el.querySelector('.mom');
@@ -1137,9 +1197,8 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
   s.start = () => later(() => { mom.className = 'st mom ok'; mom.innerHTML = `${I.checkSm}읽음`; }, 2200);
   s.leave = () => cancelAnimationFrame(raf);
 
-  const call = who => toast(`${who} 통화 화면으로 넘어가요. 프로토타입이라 실제로 걸리지 않아요.`);
-  s.el.querySelector('.c112').addEventListener('click', () => call('112'));
-  s.el.querySelector('.cmom').addEventListener('click', () => call('엄마'));
+  s.el.querySelector('.c112').addEventListener('click', () => openCall('112', '긴급신고'));
+  s.el.querySelector('.cmom').addEventListener('click', () => openCall('엄마', '휴대전화'));
 
   const finish = () => {
     const shareSec = Math.round((appNow() - INCIDENT.start) / 1000);
@@ -1619,7 +1678,7 @@ function armIdle() {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(() => {
     if (current && current.id !== 's1') {
-      closeSheet(true); hideToast();
+      closeSheet(true); hideToast(); closeCall(true);
       go('s1', NAV_DUR, EASE.slow, true);
       setTimeout(resetState, NAV_DUR + 60);   // after the dissolve, so the leaving screen doesn't jump
     }
