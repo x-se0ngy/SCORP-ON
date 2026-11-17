@@ -5,6 +5,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@300;400;500;600&family=Roboto:wght@500&display=swap">
 <style>
+/* Pretendard (bundled) : Light 300 · Medium 500 · SemiBold 600 */
+@font-face { font-family: "PretendardX"; font-weight: 300; font-display: swap; src: url(fonts/Pretendard-Light.subset.woff2) format("woff2"); }
+@font-face { font-family: "PretendardX"; font-weight: 500; font-display: swap; src: url(fonts/Pretendard-Medium.subset.woff2) format("woff2"); }
+@font-face { font-family: "PretendardX"; font-weight: 600; font-display: swap; src: url(fonts/Pretendard-SemiBold.subset.woff2) format("woff2"); }
 /* Layout: one 393×852 phone frame centered on a black stage, scaled to fit the window. */
 :root {
   --stage: #000000;
@@ -13,7 +17,8 @@
   --ink: #B5A4A4;
   --ink-hi: #DEC3C6;
   --card: #280606;
-  --font-ui: "Pretendard", "Inter", "Noto Sans KR", system-ui, sans-serif;
+  --font-ui: "PretendardX", "Pretendard", "Inter", system-ui, sans-serif;
+  --x-kr: "PretendardX", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   color-scheme: dark;
 }
 html, body { height: 100%; }
@@ -31,6 +36,7 @@ body {
 #wrap { height: 100%; display: flex; align-items: center; justify-content: center; }
 #holder { position: relative; flex: none; }
 #stage {
+  word-break: keep-all; overflow-wrap: break-word;
   position: absolute; left: 0; top: 0;
   filter: brightness(.8);
   width: 393px; height: 852px;
@@ -130,15 +136,15 @@ body {
   --x-btn-ink: #3A1515;
   --x-sos: #E5574B;
   --x-ok: #59C98A;
-  --x-num: "Inter", "Noto Sans KR", system-ui, sans-serif;
-  --x-title: "Space Grotesk", "Inter", "Noto Sans KR", system-ui, sans-serif;
+  --x-num: "Inter", "PretendardX", system-ui, sans-serif;
+  --x-title: "Space Grotesk", "Inter", "PretendardX", system-ui, sans-serif;
 }
 .x { position: absolute; }
 .x-sb { position: absolute; left: 0; top: 0; width: 393px; height: 54px; z-index: 8; pointer-events: none; }
 .x-sb span { position: absolute; left: 51px; top: 17px; font: 600 17px/22px var(--x-num); color: #EFE6E6; letter-spacing: -.01em; }
 .x-sb svg { position: absolute; right: 26px; top: 22px; }
 .x-hd { position: absolute; left: 0; top: 54px; width: 393px; height: 62px; z-index: 8; }
-.x-title { position: absolute; left: 70px; right: 70px; top: 18px; text-align: center; font: 700 20px/26px var(--x-title); color: #CDBDBD; letter-spacing: -.01em; }
+.x-title { position: absolute; left: 70px; right: 70px; top: 18px; text-align: center; font: 600 20px/26px var(--x-kr); color: var(--x-ink); letter-spacing: 0; }
 .x-title.eb { font: 600 12px/26px var(--x-num); letter-spacing: .22em; color: var(--x-dim); }
 .x-ib { position: absolute; width: 40px; height: 40px; padding: 0; border: 0; background: transparent; color: var(--x-ink); cursor: pointer; display: grid; place-items: center; border-radius: 20px; -webkit-tap-highlight-color: transparent; }
 .x-ib:active { background: rgba(181,164,164,.1); }
@@ -150,10 +156,10 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 /* buttons */
 .x-btn, .x-btn-ghost { position: absolute; border-radius: 4px; cursor: pointer; font: 500 22px/1 var(--x-num); -webkit-tap-highlight-color: transparent; transition: transform .12s ease, background .2s ease; }
 .x-btn { background: var(--x-btn); color: var(--x-btn-ink); border: 0; font-family: var(--x-title); font-weight: 700; }
-.x-btn-ghost { background: rgba(40,6,6,.6); color: var(--x-ink-hi); border: 1px solid var(--x-faint); font-size: 15px; font-family: "Noto Sans KR", var(--x-num); font-weight: 500; }
+.x-btn-ghost { background: rgba(40,6,6,.6); color: var(--x-ink-hi); border: 1px solid var(--x-faint); font-size: 15px; font-family: var(--x-kr); font-weight: 500; }
 .x-btn:active, .x-btn-ghost:active { transform: scale(.97); }
-.x-btn-ghost.lg { font: 500 20px/1 "Noto Sans KR", var(--x-num); }
-.x-cap { position: absolute; left: 0; width: 393px; text-align: center; font: 400 13px/20px "Noto Sans KR", sans-serif; color: var(--x-ink); }
+.x-btn-ghost.lg { font: 500 20px/1 var(--x-kr); }
+.x-cap { position: absolute; left: 0; width: 393px; text-align: center; font: 300 13px/20px var(--x-kr); color: var(--x-ink); }
 
 /* emergency dial */
 .x-dial { position: absolute; overflow: visible; }
@@ -172,16 +178,16 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 .x-glyph { position: absolute; left: 171.7px; top: 285.6px; width: 51.3px; height: 59.3px; max-width: none; pointer-events: none; }
 .x-glyph.breathe { animation: x-breathe 1.6s ease-in-out infinite; }
 @keyframes x-breathe { 50% { opacity: .45; } }
-.x-msg { position: absolute; left: 0; width: 393px; text-align: center; font: 500 16px/22px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-msg { position: absolute; left: 0; width: 393px; text-align: center; font: 500 16px/22px var(--x-kr); color: var(--x-ink-hi); }
 .x-msg b { font: 600 16px/22px var(--x-num); font-variant-numeric: tabular-nums; color: #F0E2E3; }
-.x-sub { position: absolute; left: 0; width: 393px; text-align: center; font: 400 12px/18px "Noto Sans KR", sans-serif; color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-sub { position: absolute; left: 0; width: 393px; text-align: center; font: 300 12px/18px var(--x-kr); color: var(--x-dim); font-variant-numeric: tabular-nums; }
 .x-rcpt { position: absolute; left: 0; width: 393px; display: flex; justify-content: center; gap: 8px; }
-.x-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px; border-radius: 15px; background: var(--x-card); border: 1px solid var(--x-line); font: 500 13px/1 "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px 0 10px; border-radius: 15px; background: var(--x-card); border: 1px solid var(--x-line); font: 500 13px/1 var(--x-kr); color: var(--x-ink-hi); }
 .x-pill svg { flex: none; }
 
 /* sending steps */
 .x-steps { position: absolute; left: 62px; width: 269px; margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
-.x-steps li { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; height: 30px; font: 400 14px/1 "Noto Sans KR", sans-serif; color: var(--x-faint); transition: color .25s ease; }
+.x-steps li { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; height: 30px; font: 300 14px/1 var(--x-kr); color: var(--x-faint); transition: color .25s ease; }
 .x-steps li.active, .x-steps li.done { color: var(--x-ink-hi); }
 .x-steps li .r { font: 500 12px/1 var(--x-num); font-variant-numeric: tabular-nums; color: var(--x-dim); }
 .x-steps li.done .r { color: var(--x-ink); }
@@ -194,16 +200,16 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 
 /* incident card */
 .x-icard { position: absolute; left: 20px; width: 353px; background: var(--x-card); border: 1px solid var(--x-line); border-radius: 4px; box-sizing: border-box; }
-.x-irow { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 16px; font: 400 14px/1 "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
+.x-irow { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 16px; font: 300 14px/1 var(--x-kr); color: var(--x-ink-hi); }
 .x-irow + .x-irow { border-top: 1px solid var(--x-line); }
-.x-irow .st { display: inline-flex; align-items: center; gap: 6px; font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-ink); font-variant-numeric: tabular-nums; }
+.x-irow .st { display: inline-flex; align-items: center; gap: 6px; font: 300 12px/1 var(--x-kr); color: var(--x-ink); font-variant-numeric: tabular-nums; }
 .x-irow .st.ok { color: var(--x-ok); }
 .x-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--x-sos); animation: x-blink 1.2s steps(1) infinite; }
 @keyframes x-blink { 50% { opacity: .2; } }
 .x-call { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 .x-hold { overflow: hidden; }
 .x-hold .fill { position: absolute; inset: 0; background: #E9DCDC; transform-origin: 0 50%; transform: scaleX(0); }
-.x-hold span { position: relative; font: 500 16px/1 "Noto Sans KR", sans-serif; }
+.x-hold span { position: relative; font: 500 16px/1 var(--x-kr); }
 
 /* overlay: sheet + toast */
 .x-ov { position: absolute; inset: 0; z-index: 60; }
@@ -212,17 +218,17 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 .x-ov.on .x-scrim { opacity: 1; }
 .x-ov.on .x-sheet { transform: none; }
 .x-grab { width: 36px; height: 4px; border-radius: 2px; background: var(--x-faint); margin: 0 auto 16px; }
-.x-sh-t { font: 600 17px/24px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); text-wrap: balance; }
-.x-sh-s { margin-top: 6px; font: 400 13px/19px "Noto Sans KR", sans-serif; color: var(--x-dim); }
+.x-sh-t { font: 600 17px/24px var(--x-kr); color: var(--x-ink-hi); text-wrap: balance; }
+.x-sh-s { margin-top: 6px; font: 300 13px/19px var(--x-kr); color: var(--x-dim); }
 .x-sh-list { display: grid; gap: 1px; margin-top: 14px; border-radius: 6px; overflow: hidden; background: var(--x-line); }
-.x-sh-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 16px; background: var(--x-card); border: 0; text-align: left; color: var(--x-ink-hi); font: 400 15px/1.3 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-sh-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 15px 16px; box-sizing: border-box; background: var(--x-card); border: 0; text-align: left; color: var(--x-ink-hi); font: 600 16px/1.4 var(--x-kr); cursor: pointer; }
 .x-sh-item:active { background: var(--x-card-hi); }
 .x-sh-item .lb { flex: 1; }
-.x-sh-item .sb { font-size: 12px; color: var(--x-dim); }
+.x-sh-item .sb { display: inline-block; margin-top: 4px; font: 300 13px/1.4 var(--x-kr); color: var(--x-dim); }
 .x-sh-item.danger { color: #F08A80; }
-.x-sh-item.primary { background: var(--x-btn); color: var(--x-btn-ink); font-weight: 500; justify-content: center; }
+.x-sh-item.primary { background: var(--x-btn); color: var(--x-btn-ink); font-weight: 600; justify-content: center; }
 .x-sh-item .ck { width: 18px; height: 18px; color: var(--x-ink-hi); }
-.x-sh-cancel { display: block; width: 100%; height: 48px; margin-top: 10px; border: 0; border-radius: 6px; background: transparent; color: var(--x-ink); font: 500 15px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-sh-cancel { display: block; width: 100%; height: 48px; margin-top: 10px; border: 0; border-radius: 6px; background: transparent; color: var(--x-ink); font: 500 15px/1 var(--x-kr); cursor: pointer; }
 .x-pin-dots { display: flex; gap: 18px; justify-content: center; margin: 22px 0 18px; }
 .x-pin-dots i { width: 13px; height: 13px; border-radius: 50%; border: 1.4px solid var(--x-ink); box-sizing: border-box; transition: background .12s ease; }
 .x-pin-dots i.on { background: var(--x-ink-hi); border-color: var(--x-ink-hi); }
@@ -232,50 +238,50 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 .x-pad button { height: 54px; border: 0; border-radius: 8px; background: var(--x-card); color: var(--x-ink-hi); font: 400 24px/1 var(--x-num); cursor: pointer; }
 .x-pad button:active { background: var(--x-card-hi); }
 .x-pad button.nil { visibility: hidden; }
-.x-pad button.del { font-size: 15px; font-family: "Noto Sans KR", sans-serif; background: transparent; }
-.x-toast { position: absolute; left: 50%; top: 62px; z-index: 70; display: flex; align-items: center; gap: 14px; max-width: 333px; width: max-content; padding: 12px 16px; box-sizing: border-box; border-radius: 4px; background: #E4D6D6; color: #2A0A0A; font: 500 13px/18px "Noto Sans KR", sans-serif; transform: translate(-50%, -10px); opacity: 0; pointer-events: none; transition: opacity .22s ease, transform .3s cubic-bezier(.22,.8,.3,1); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.x-pad button.del { font-size: 15px; font-family: var(--x-kr); background: transparent; }
+.x-toast { position: absolute; left: 50%; top: 62px; z-index: 70; display: flex; align-items: center; gap: 14px; max-width: 333px; width: max-content; padding: 12px 16px; box-sizing: border-box; border-radius: 4px; background: #E4D6D6; color: #2A0A0A; font: 500 13px/18px var(--x-kr); transform: translate(-50%, -10px); opacity: 0; pointer-events: none; transition: opacity .22s ease, transform .3s cubic-bezier(.22,.8,.3,1); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
 .x-toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
-.x-toast button { flex: none; border: 0; background: transparent; padding: 0; color: #7A1E16; font: 600 13px/18px "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-toast button { flex: none; border: 0; background: transparent; padding: 0; color: #7A1E16; font: 600 13px/18px var(--x-kr); cursor: pointer; }
 .x-badge { position: absolute; left: 318.5px; top: 71px; width: 9px; height: 9px; border-radius: 50%; background: var(--x-sos); box-shadow: 0 0 0 2px #2A0606; z-index: 21; pointer-events: none; }
 
 /* lists */
 .x-scroll { position: absolute; left: 0; width: 393px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; overscroll-behavior: contain; }
 .x-scroll::-webkit-scrollbar { display: none; }
 .x-fade-b { position: absolute; left: 0; bottom: 0; width: 393px; height: 120px; pointer-events: none; z-index: 5; background: linear-gradient(180deg, rgba(0,0,0,0), #000 82%); }
-.x-sec { padding: 18px 22px 8px; font: 500 12px/1 "Noto Sans KR", sans-serif; letter-spacing: .04em; color: var(--x-dim); }
+.x-sec { padding: 18px 22px 8px; font: 500 12px/1 var(--x-kr); letter-spacing: .04em; color: var(--x-dim); }
 .x-tag { display: inline-grid; place-items: center; height: 20px; padding: 0 7px; border-radius: 3px; background: var(--x-btn); color: var(--x-btn-ink); font: 700 10px/1 var(--x-title); letter-spacing: .1em; }
 .x-tag.sos { background: var(--x-sos); color: #fff; }
 .x-tag.ghost { background: transparent; color: var(--x-ink); box-shadow: inset 0 0 0 1px var(--x-faint); }
 .x-empty { padding: 60px 40px; text-align: center; }
-.x-empty b { display: block; font: 500 15px/22px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
-.x-empty span { display: block; margin-top: 6px; font: 400 13px/19px "Noto Sans KR", sans-serif; color: var(--x-dim); }
+.x-empty b { display: block; font: 500 15px/22px var(--x-kr); color: var(--x-ink-hi); }
+.x-empty span { display: block; margin-top: 6px; font: 300 13px/19px var(--x-kr); color: var(--x-dim); }
 
 /* notifications */
 .x-chips { position: absolute; left: 20px; right: 20px; display: flex; gap: 6px; }
-.x-chip { height: 32px; padding: 0 13px; border-radius: 16px; border: 1px solid var(--x-line); background: transparent; color: var(--x-ink); font: 500 13px/1 "Noto Sans KR", sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.x-chip { height: 32px; padding: 0 13px; border-radius: 4px; border: 1px solid var(--x-line); background: transparent; color: var(--x-ink); font: 500 13px/1 var(--x-kr); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
 .x-chip em { font: 500 12px/1 var(--x-num); font-style: normal; opacity: .7; }
 .x-chip.on { background: var(--x-btn); border-color: var(--x-btn); color: var(--x-btn-ink); }
 .x-nwrap { position: relative; margin: 0 20px 8px; border-radius: 4px; overflow: hidden; transition: height .22s ease, margin .22s ease, opacity .2s ease; }
-.x-ndel { position: absolute; right: 0; top: 0; bottom: 0; width: 84px; border: 0; background: #7A1E16; color: #FBE9E7; font: 500 14px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-ndel { position: absolute; right: 0; top: 0; bottom: 0; width: 84px; border: 0; background: #7A1E16; color: #FBE9E7; font: 500 14px/1 var(--x-kr); cursor: pointer; }
 .x-ncard { position: relative; display: grid; grid-template-columns: 24px 1fr auto; column-gap: 8px; row-gap: 5px; width: 100%; padding: 11px 14px 12px 14px; box-sizing: border-box; background: var(--x-card); border: 1px solid var(--x-line); border-radius: 4px; text-align: left; cursor: pointer; touch-action: pan-y; color: var(--x-ink); }
 .x-ncard.unread { background: var(--x-card-hi); border-color: rgba(222,195,198,.32); }
 .x-ncard .ico { grid-row: 1; display: grid; place-items: center; height: 22px; }
-.x-ncard .h { align-self: center; font: 700 15px/22px var(--x-title); letter-spacing: .02em; color: var(--x-ink-hi); }
+.x-ncard .h { align-self: center; font: 600 16px/1.5 var(--x-kr); letter-spacing: 0; color: var(--x-ink); }
 .x-ncard .h.sos { color: #F2A098; }
-.x-ncard .tm { align-self: center; display: inline-flex; align-items: center; gap: 6px; font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-ncard .tm { align-self: center; display: inline-flex; align-items: center; gap: 6px; font: 300 12px/1 var(--x-kr); color: var(--x-dim); font-variant-numeric: tabular-nums; }
 .x-ncard .tm i { width: 6px; height: 6px; border-radius: 50%; background: var(--x-sos); }
-.x-ncard .b { grid-column: 1 / -1; font: 400 13px/19px "Noto Sans KR", sans-serif; color: var(--x-ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.x-ncard .b { grid-column: 1 / -1; font: 300 13px/19px var(--x-kr); color: var(--x-ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .x-ncard:not(.unread) .h, .x-ncard:not(.unread) .b { opacity: .72; }
 .x-nd-top { display: flex; align-items: center; justify-content: space-between; }
-.x-nd-time { font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-dim); font-variant-numeric: tabular-nums; }
-.x-nd-title { margin-top: 14px; font: 600 19px/26px "Noto Sans KR", sans-serif; color: var(--x-ink-hi); }
-.x-nd-body { margin-top: 6px; font: 400 14px/21px "Noto Sans KR", sans-serif; color: var(--x-ink); }
+.x-nd-time { font: 300 12px/1 var(--x-kr); color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-nd-title { margin-top: 14px; font: 600 19px/26px var(--x-kr); color: var(--x-ink-hi); }
+.x-nd-body { margin-top: 6px; font: 300 14px/21px var(--x-kr); color: var(--x-ink); }
 .x-meta { margin: 16px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 9px 18px; padding: 14px 16px; border-radius: 6px; background: var(--x-card); }
-.x-meta dt { font: 400 12px/18px "Noto Sans KR", sans-serif; color: var(--x-dim); }
-.x-meta dd { margin: 0; font: 400 13px/18px "Noto Sans KR", var(--x-num); color: var(--x-ink-hi); font-variant-numeric: tabular-nums; text-align: right; }
+.x-meta dt { font: 300 12px/18px var(--x-kr); color: var(--x-dim); }
+.x-meta dd { margin: 0; font: 300 13px/18px var(--x-kr); color: var(--x-ink-hi); font-variant-numeric: tabular-nums; text-align: right; }
 .x-sh-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
 .x-sh-acts.one { grid-template-columns: 1fr; }
-.x-sh-acts button { height: 50px; border-radius: 6px; border: 1px solid var(--x-faint); background: transparent; color: var(--x-ink-hi); font: 500 15px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-sh-acts button { height: 50px; border-radius: 6px; border: 1px solid var(--x-faint); background: transparent; color: var(--x-ink-hi); font: 500 15px/1 var(--x-kr); cursor: pointer; }
 .x-sh-acts button.primary { background: var(--x-btn); border-color: var(--x-btn); color: var(--x-btn-ink); }
 
 /* calendar */
@@ -286,7 +292,7 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 .x-cal-nav { display: flex; gap: 6px; }
 .x-cal-nav button { width: 44px; height: 36px; border-radius: 4px; border: 0; background: var(--x-card); color: var(--x-ink); cursor: pointer; display: grid; place-items: center; }
 .x-cal-nav button:active { background: var(--x-card-hi); }
-.x-cal-sum { position: absolute; left: 20px; display: flex; gap: 14px; font: 400 12px/1 "Noto Sans KR", sans-serif; color: var(--x-dim); }
+.x-cal-sum { position: absolute; left: 20px; display: flex; gap: 14px; font: 300 12px/1 var(--x-kr); color: var(--x-dim); }
 .x-cal-sum span { display: inline-flex; align-items: center; gap: 6px; }
 .x-cal-sum b { font: 600 12px/1 var(--x-num); color: var(--x-ink-hi); font-variant-numeric: tabular-nums; }
 .x-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
@@ -311,11 +317,11 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 .x-day:not(.sel):active { background: var(--x-card); }
 .x-dayhead { position: absolute; left: 20px; right: 20px; height: 40px; display: flex; align-items: baseline; gap: 10px; }
 .x-dayhead .d { font: 500 34px/1 var(--x-title); color: var(--x-ink-hi); font-variant-numeric: tabular-nums; }
-.x-dayhead .w { font: 400 13px/1 "Noto Sans KR", var(--x-num); color: var(--x-ink); }
+.x-dayhead .w { font: 300 13px/1 var(--x-kr); color: var(--x-ink); }
 .x-dayhead .x-cal-nav { margin-left: auto; align-self: center; }
 .x-ev { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; width: 353px; height: 56px; margin: 0 20px 8px; padding: 0 12px 0 10px; box-sizing: border-box; border: 0; border-radius: 4px; background: var(--x-card); color: var(--x-ink-hi); text-align: left; cursor: pointer; }
 .x-ev:active { background: var(--x-card-hi); }
-.x-ev .t { font: 400 14px/1.3 "Noto Sans KR", sans-serif; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.x-ev .t { font: 300 14px/1.3 var(--x-kr); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .x-ev .tm { font: 400 13px/1 var(--x-num); color: var(--x-ink); font-variant-numeric: tabular-nums; }
 .x-ev .x-tag { width: 64px; height: 24px; padding: 0; }
 
@@ -355,15 +361,15 @@ button.x-pb-tr i { width: 6px; height: 6px; border-radius: 50%; background: var(
 .x-cbtn.off { background: rgba(199,182,182,.35); color: var(--x-ink-hi); }
 .x-tlhead { position: absolute; left: 20px; right: 14px; height: 34px; display: flex; align-items: center; gap: 10px; }
 .x-tlhead .tt { font: 700 24px/1 var(--x-title); letter-spacing: -.01em; color: var(--x-ink); }
-.x-tlhead .fchip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 13px; border: 0; background: var(--x-btn); color: var(--x-btn-ink); font: 500 12px/1 "Noto Sans KR", sans-serif; cursor: pointer; }
+.x-tlhead .fchip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 13px; border: 0; background: var(--x-btn); color: var(--x-btn-ink); font: 500 12px/1 var(--x-kr); cursor: pointer; }
 .x-tlhead .x-ib { position: relative; margin-left: auto; }
 .x-clip { position: relative; display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: 12px; width: 353px; height: 58px; margin: 0 20px 6px; padding: 0 12px 0 8px; box-sizing: border-box; border: 1px solid transparent; border-radius: 4px; background: var(--x-card); color: var(--x-ink-hi); text-align: left; cursor: pointer; }
 .x-clip.sel { border-color: rgba(222,195,198,.55); background: var(--x-card-hi); }
 .x-clip .th { position: relative; width: 54px; height: 40px; border-radius: 2px; overflow: hidden; background: #000; }
 .x-clip .th img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
 .x-clip .th em { position: absolute; right: 3px; bottom: 2px; font: 600 9px/1 var(--x-num); font-style: normal; color: #fff; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; }
-.x-clip .t1 { display: flex; align-items: center; gap: 5px; font: 500 14px/1.2 "Noto Sans KR", sans-serif; }
-.x-clip .t2 { margin-top: 4px; font: 400 12px/1 "Noto Sans KR", var(--x-num); color: var(--x-dim); font-variant-numeric: tabular-nums; }
+.x-clip .t1 { display: flex; align-items: center; gap: 5px; font: 500 14px/1.2 var(--x-kr); }
+.x-clip .t2 { margin-top: 4px; font: 300 12px/1 var(--x-kr); color: var(--x-dim); font-variant-numeric: tabular-nums; }
 .x-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; margin-left: 2px; }
 .x-eq i { width: 2px; background: var(--x-ink-hi); animation: x-eq .9s ease-in-out infinite; }
 .x-eq i:nth-child(2) { animation-delay: -.3s; }
@@ -704,6 +710,7 @@ function makeScroller(sc) {
       <div class="card" style="top:${TOP + 771.2}px"><span class="t" data-w="133">클라우드 자동 업로드</span></div>
     </div></div>
     <img class="fixed" src="img3/s124_top.png" alt="" style="top:0;width:393px;height:115px">
+    <div class="x-hd" style="pointer-events:none"><div class="x-title">Setting</div></div>
     <img class="fixed" src="img3/s124_bot.png" alt="" style="top:686px;width:393px;height:166px">
     <div class="homebar"></div>`);
   const inner = s.el.querySelector('.inner');
@@ -761,16 +768,16 @@ const dayLabel = ms => {
 
 const ST = {
   notifs: [
-    { id: 'n1', type: 'SYSTEM', at: at(11, 19, 21, 36), read: false, title: 'SCORP-02 연결 끊김', body: 'SCORP-02와 연결이 끊어졌습니다. 기기가 근처에 있는지 확인하세요.', meta: [['기기', 'SCORP-02'], ['마지막 연결', '21:35']], act: { label: '기기 설정 열기', go: 's124' } },
-    { id: 'n2', type: 'DETECT', at: at(11, 19, 21, 13), read: false, title: '이상 음향 감지 · 82dB', body: '반복적인 비명 주파수가 감지되어 자동 녹화를 시작했습니다.', meta: [['감지 강도', '82dB'], ['녹화', '01:32 · 42MB']], clip: 'c1' },
-    { id: 'n3', type: 'NOTICE', at: at(11, 19, 19, 40), read: false, title: '펌웨어 V2.1 적용', body: 'V2.1 업데이트로 새로운 감지 알고리즘이 적용되었습니다.', meta: [['버전', '3.1v → V2.1 알고리즘']] },
-    { id: 'n4', type: 'DETECT', at: at(11, 15, 23, 2), read: true, title: '후방 3m 접근 감지', body: '후방 3m 이내 접근이 감지되어 진동 경고를 보냈습니다.', meta: [['거리', '3.0m'], ['녹화', '02:08 · 58MB']], clip: 'c3' },
-    { id: 'n5', type: 'NOTICE', at: at(11, 15, 22, 10), read: true, title: '야간 감지 모드 전환', body: '주변 조도가 낮아 야간 감지 모드로 전환되었습니다.' },
-    { id: 'n6', type: 'DETECT', at: at(11, 12, 2, 16), read: true, title: '근접 경고 · 120dB', body: '근접 경고 감지, 0.8m 이내 120dB이 감지되었습니다.', meta: [['거리', '0.8m'], ['감지 강도', '120dB']], clip: 'c4' },
-    { id: 'n7', type: 'NOTICE', at: at(11, 5, 18, 20), read: true, title: '민감도 자동 조정', body: '주변 소음이 높아 오디오 감지 민감도가 조정되었습니다.', act: { label: '민감도 보기', go: 's127' } },
-    { id: 'n8', type: 'EMERGENCY', at: at(10, 11, 23, 48), read: true, title: '긴급 신고 완료', body: '긴급 신고 완료, 위치 및 영상이 전송되었습니다.', meta: [['접수번호', '1011-2207'], ['수신', '112 신고센터 · 엄마']], clip: 'e1' },
-    { id: 'n9', type: 'DETECT', at: at(10, 3, 1, 12), read: true, title: '장시간 정지 감지', body: '장시간 정지, 6시간 이상 움직임이 감지되지 않았습니다.' },
-    { id: 'n10', type: 'SYSTEM', at: at(10, 2, 9, 0), read: true, title: '센서 점검 완료', body: '센서 점검이 완료되었습니다. 모든 기능이 정상 작동합니다.' },
+    { id: 'n1', type: 'SYSTEM', at: at(11, 19, 21, 36), read: false, title: 'SCORP-02 연결 끊김', body: 'SCORP-02 연결이 끊겼습니다. 기기를 확인하세요.', meta: [['기기', 'SCORP-02'], ['마지막 연결', '21:35']], act: { label: '기기 설정 열기', go: 's124' } },
+    { id: 'n2', type: 'DETECT', at: at(11, 19, 21, 13), read: false, title: '이상 음향 감지 · 82dB', body: '비명 주파수가 감지되어 자동 녹화를 시작했습니다.', meta: [['감지 강도', '82dB'], ['녹화', '01:32 · 42MB']], clip: 'c1' },
+    { id: 'n3', type: 'NOTICE', at: at(11, 19, 19, 40), read: false, title: '펌웨어 V2.1 적용', body: 'V2.1 업데이트로 새 감지 알고리즘이 적용되었습니다.', meta: [['버전', '3.1v → V2.1 알고리즘']] },
+    { id: 'n4', type: 'DETECT', at: at(11, 15, 23, 2), read: true, title: '후방 3m 접근 감지', body: '후방 3m 접근이 감지되어 진동 경고를 보냈습니다.', meta: [['거리', '3.0m'], ['녹화', '02:08 · 58MB']], clip: 'c3' },
+    { id: 'n5', type: 'NOTICE', at: at(11, 15, 22, 10), read: true, title: '야간 감지 모드 전환', body: '조도가 낮아 야간 감지 모드로 전환되었습니다.' },
+    { id: 'n6', type: 'DETECT', at: at(11, 12, 2, 16), read: true, title: '근접 경고 · 120dB', body: '근접 경고, 0.8m 이내 120dB이 감지되었습니다.', meta: [['거리', '0.8m'], ['감지 강도', '120dB']], clip: 'c4' },
+    { id: 'n7', type: 'NOTICE', at: at(11, 5, 18, 20), read: true, title: '민감도 자동 조정', body: '주변 소음이 높아 감지 민감도가 조정되었습니다.', act: { label: '민감도 보기', go: 's127' } },
+    { id: 'n8', type: 'EMERGENCY', at: at(10, 11, 23, 48), read: true, title: '긴급 신고 완료', body: '긴급 신고 완료, 위치와 영상이 전송되었습니다.', meta: [['접수번호', '1011-2207'], ['수신', '112 신고센터 · 엄마']], clip: 'e1' },
+    { id: 'n9', type: 'DETECT', at: at(10, 3, 1, 12), read: true, title: '장시간 정지 감지', body: '6시간 이상 움직임이 감지되지 않았습니다.' },
+    { id: 'n10', type: 'SYSTEM', at: at(10, 2, 9, 0), read: true, title: '센서 점검 완료', body: '센서 점검 완료, 모든 기능이 정상 작동합니다.' },
   ],
   clips: [
     { id: 'c1', at: at(11, 19, 21, 13), dur: 92, type: 'AUTO', label: '이상 음향 감지', size: 42, v: 0 },
@@ -782,7 +789,7 @@ const ST = {
     { id: 'e1', at: at(10, 11, 23, 48), dur: 180, type: 'SOS', label: '긴급 신고', size: 83, v: 2, lock: true },
   ],
   extra: [
-    { id: 'x1', type: 'DETECT', tag: 'DETECT', at: at(11, 8, 14, 22), title: '이상 음향 감지 · 82dB', body: '반복적인 고주파 음향이 감지되어 녹화를 권장했습니다.' },
+    { id: 'x1', type: 'DETECT', tag: 'DETECT', at: at(11, 8, 14, 22), title: '이상 음향 감지 · 82dB', body: '고주파 음향이 감지되어 녹화를 권장했습니다.' },
     { id: 'x2', type: 'DETECT', tag: 'ALERT', at: at(11, 8, 2, 16), title: '후방 3m 접근 감지', body: '후방 3m 이내 접근이 감지되었습니다.' },
     { id: 'x3', type: 'DETECT', tag: 'ALERT', at: at(11, 3, 22, 40), title: '근접 경고 · 76dB', body: '1.2m 이내 접근과 76dB 음향이 함께 감지되었습니다.' },
     { id: 'x4', type: 'DETECT', tag: 'ALERT', at: at(10, 20, 19, 5), title: '후방 5m 접근 감지', body: '후방 5m 이내 접근이 감지되었습니다.' },
