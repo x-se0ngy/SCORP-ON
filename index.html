@@ -60,7 +60,7 @@ body {
   -webkit-tap-highlight-color: transparent; z-index: 20;
 }
 .hs:focus { outline: none; }
-.hs:focus-visible { outline: 1px dashed rgba(181,164,164,.6); outline-offset: 2px; }
+.hs:focus-visible { outline: none; }
 .fade { position: absolute; transition-property: opacity; }
 
 /* radar + loading */
@@ -106,9 +106,11 @@ body {
   position: absolute; width: 64px; height: 28px; border-radius: 14px;
   background: var(--ink); cursor: pointer; padding: 0; border: 0;
 }
-.tg i { position: absolute; top: 2px; width: 39px; height: 24px; border-radius: 12px; }
+.tg i { position: absolute; top: 2px; left: 2px; width: 39px; height: 24px; border-radius: 12px; will-change: transform;
+  transition: transform .3s cubic-bezier(.42,0,.58,1), background-color .3s cubic-bezier(.42,0,.58,1); }
+.tg.snap i { transition: none; }
 .tg:focus { outline: none; }
-.tg:focus-visible { outline: 1px dashed rgba(181,164,164,.6); outline-offset: 2px; }
+.tg:focus-visible { outline: none; }
 .ncard { position: absolute; left: 20px; width: 353px; height: 59.9px; background: var(--card); border-radius: 4px; }
 .ncard .h { position: absolute; left: 44.5px; top: 8px; font: 600 16px/24px var(--font-ui); color: var(--ink); }
 .ncard .d { position: absolute; left: 267.5px; top: 9.5px; width: 69px; text-align: right; font: 300 14px/21px var(--font-ui); color: var(--ink); }
@@ -726,7 +728,7 @@ function makeScroller(sc) {
     const k = b.querySelector('i');
     const t = { b, init: on, on };
     t.render = () => {
-      k.style.left = t.on ? '23px' : '2px';
+      k.style.transform = t.on ? 'translateX(21px)' : 'none';
       k.style.background = knobColor || (t.on ? KNOB.on : KNOB.off);
       b.setAttribute('aria-checked', t.on);
     };
@@ -734,7 +736,7 @@ function makeScroller(sc) {
     inner.appendChild(b);
     return t;
   });
-  s.enter = () => { sc.scrollTop = 0; toggles.forEach(t => { t.on = t.init; t.render(); }); fitText(s.el); };
+  s.enter = () => { sc.scrollTop = 0; toggles.forEach(t => { t.b.classList.add('snap'); t.on = t.init; t.render(); void t.b.offsetWidth; t.b.classList.remove('snap'); }); fitText(s.el); };
   s.layer = s.el;
   hotspot(s, 24, 69, 32, 32, 's1', 400, EASE.io, '뒤로');
 }
