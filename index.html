@@ -67,6 +67,7 @@ body {
 .spin { position: absolute; max-width: none; }
 .radar-sweep { transform-origin: 182.689px 177.554px; animation: sweep 3.6s linear infinite; }
 @keyframes sweep { to { transform: rotate(-360deg); } }
+#dots.spinning { animation: sweep 8.8s linear infinite; }
 /* radar blips : small glass beads */
 .r-dot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%;
   background: radial-gradient(circle at 34% 30%, rgba(255,255,255,.8) 0, rgba(255,240,242,.3) 30%, rgba(181,164,164,.1) 62%, rgba(222,195,198,.28) 100%);
@@ -158,7 +159,7 @@ body {
 .x-back { left: 20px; top: 11px; }
 .x-more { right: 20px; top: 11px; }
 button:focus { outline: none; }
-button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset: 2px; }
+button:focus-visible { outline: none; }
 
 /* buttons */
 .x-btn, .x-btn-ghost { position: absolute; border-radius: 4px; cursor: pointer; font: 500 22px/1 var(--x-num); -webkit-tap-highlight-color: transparent; transition: transform .12s ease, background .2s ease; }
@@ -260,8 +261,8 @@ button:focus-visible { outline: 1.5px solid rgba(222,195,198,.7); outline-offset
 .x-tag.sos { background: var(--x-sos); color: #fff; }
 .x-tag.ghost { background: transparent; color: var(--x-ink); box-shadow: inset 0 0 0 1px var(--x-faint); }
 .x-empty { padding: 60px 40px; text-align: center; }
-.x-empty b { display: block; font: 500 15px/22px var(--x-kr); color: var(--x-ink-hi); }
-.x-empty span { display: block; margin-top: 6px; font: 300 13px/19px var(--x-kr); color: var(--x-dim); }
+.x-empty b { display: block; font: 500 15px/20px var(--x-kr); color: var(--x-ink-hi); }
+.x-empty span { display: block; margin-top: 3px; font: 300 13px/18px var(--x-kr); color: var(--x-dim); }
 
 /* notifications */
 .x-chips { position: absolute; left: 20px; right: 20px; display: flex; gap: 6px; }
@@ -507,18 +508,10 @@ function go(to, dur = 400, ease = EASE.io, isBack = false) {
     img('l2_vector.png', 0, 62, 'width:393px;height:790px') +
     img('l2_scanning.png', 155, 466, 'width:82px;height:28px')));
   const dots = s.el.querySelector('#dots');
-  let angle = 0;
-  s.enter = () => { angle = 0; dots.style.transition = 'none'; dots.style.transform = 'rotate(0deg)'; };
-  s.start = () => {
-    const step = () => {
-      angle -= 45;
-      dots.style.transition = `transform 800ms ${EASE.io}`;
-      dots.style.transform = `rotate(${angle}deg)`;
-      later(step, 1100);
-    };
-    later(step, 300);
-  };
-  s.auto = { after: 1700, to: 's3', dur: 350, ease: EASE.io };   // HIN loading: hold 1.7s → 350ms dissolve
+  // continuous spin (same average speed as the Figma 45°/1.1s steps, without the stop-start)
+  s.enter = () => { dots.classList.remove('spinning'); void dots.offsetWidth; dots.classList.add('spinning'); };
+  s.leave = () => dots.classList.remove('spinning');
+  s.auto = { after: 2600, to: 's3', dur: 800, ease: EASE.io };
   hotspot(s, 24, 60, 43, 51, 's1', 400, EASE.io, '뒤로');
 }
 
@@ -992,11 +985,9 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
     ${dialSVG(`<circle cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".07" stroke-width="9"/>
       <circle class="ring" cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".34" stroke-width="9" stroke-linecap="round" transform="rotate(-90 142.5 142.4)" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/>`)}
     <div class="x-cdnum">5</div>
-    <div class="x-msg" style="top:482px"><b class="n">5</b>초 후 자동으로 신고됩니다.</div>
-    <div class="x-rcpt" style="top:518px"><span class="x-pill">${I.badge}112 신고센터</span><span class="x-pill">${I.person}엄마</span></div>
-    <div class="x-sub" style="top:560px">현재 위치 · 실시간 영상 · 주변 음성이 함께 전송돼요.</div>
-    <button class="x-btn-ghost now" type="button" style="left:105px;top:604px;width:184px;height:46px">지금 바로 신고</button>
-    <div class="x-cap" style="top:684px">취소하려면 PIN을 입력하세요.</div>
+    <div class="x-msg" style="top:470px"><b class="n">5</b>초 후 자동으로 신고됩니다.</div>
+    <div class="x-sub" style="top:500px">112와 엄마에게 위치·영상·음성이 전송돼요.</div>
+    <button class="x-btn-ghost x-call now" type="button" style="left:105px;top:656px;width:184px;height:44px">지금 바로 신고</button>
     <button class="x-btn cancel" type="button" style="left:105px;top:716px;width:184px;height:66px">Cancel</button>
     <div class="homebar"></div>`);
   const ring = s.el.querySelector('.ring'), num = s.el.querySelector('.x-cdnum'), msgN = s.el.querySelector('.x-msg .n');
@@ -1123,15 +1114,15 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
     ${chrome('', { back: false })}
     ${dialSVG(`<circle cx="142.5" cy="142.4" r="132.5" stroke="#B5A4A4" stroke-opacity=".22" stroke-width="1"/>`)}
     <img class="x-glyph" src="img3/glyph.png" alt="">
-    <div class="x-msg" style="top:476px">신고가 접수되었어요.</div>
+    <div class="x-msg" style="top:470px">신고가 접수되었어요.</div>
     <div class="x-sub inc" style="top:500px"></div>
-    <div class="x-icard" style="top:530px">
+    <div class="x-icard" style="top:532px">
       <div class="x-irow"><span>112 신고센터</span><span class="st ok">${I.checkSm}수신 확인</span></div>
       <div class="x-irow"><span>엄마</span><span class="st mom">전송됨</span></div>
       <div class="x-irow"><span>실시간 위치 공유</span><span class="st"><i class="x-live-dot"></i><span class="share">00:00</span></span></div>
     </div>
-    <button class="x-btn-ghost x-call c112" type="button" style="left:20px;top:658px;width:171px;height:44px">112 전화</button>
-    <button class="x-btn-ghost x-call cmom" type="button" style="left:202px;top:658px;width:171px;height:44px">엄마에게 전화</button>
+    <button class="x-btn-ghost x-call c112" type="button" style="left:20px;top:656px;width:171px;height:44px">112 전화</button>
+    <button class="x-btn-ghost x-call cmom" type="button" style="left:202px;top:656px;width:171px;height:44px">엄마에게 전화</button>
     <button class="x-btn x-hold" type="button" style="left:105px;top:716px;width:184px;height:66px" aria-label="길게 눌러 안전 확인"><i class="fill"></i><span>길게 눌러 안전 확인</span></button>
     <div class="homebar"></div>`);
   const inc = s.el.querySelector('.inc'), share = s.el.querySelector('.share'), mom = s.el.querySelector('.mom');
@@ -1336,7 +1327,7 @@ const INCIDENT = { start: 0, no: '', share0: 0 };
     s.el.querySelector('.x-dayhead .w').textContent = `${MON_EN[d.getMonth()]} · ${evs.length ? `${evs.length}개 이벤트` : '이벤트 없음'}`;
     sc.scrollTop = 0;
     if (!evs.length) {
-      list.innerHTML = `<div class="x-empty" style="padding-top:34px"><b>${sel > BASE ? '아직 오지 않은 날이에요.' : '기록된 이벤트가 없어요.'}</b><span>감지·녹화·신고가 생기면 날짜별로 여기에 모여요.</span></div>`;
+      list.innerHTML = `<div class="x-empty" style="padding:128px 30px 0"><b>${sel > BASE ? '아직 오지 않은 날이에요.' : '기록된 이벤트가 없어요.'}</b><span>감지·녹화·신고가 생기면 날짜별로 여기에 모여요.</span></div>`;
       return;
     }
     list.innerHTML = evs.map((e, i) => `<button type="button" class="x-ev" data-i="${i}"><span class="x-tag${e.tag === 'SOS' ? ' sos' : ''}">${e.tag}</span><span class="t">${e.title}</span><span class="tm">${fmtTime(e.at)}</span></button>`).join('');
@@ -1637,7 +1628,11 @@ function armIdle() {
 ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev => window.addEventListener(ev, armIdle, { passive: true, capture: true }));
 armIdle();
 
-go('s2', 0);
+const BOOT_IMGS = ['s2', 'l2_vector', 'l2_scanning', 'r_dots', 's3', 's1', 's1_bgpatch', 's1_product'];
+Promise.race([
+  Promise.all(BOOT_IMGS.map(n => { const i = new Image(); i.src = `img3/${n}.png`; return (i.decode ? i.decode() : Promise.resolve()).catch(() => {}); })),
+  new Promise(r => setTimeout(r, 2500)),
+]).then(() => { if (!current) go('s2', 700, EASE.io); });
 window.__proto = { go, get current() { return current && current.id; } };
 })();
 </script>
