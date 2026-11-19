@@ -1661,9 +1661,11 @@ window.addEventListener('keydown', e => {
 });
 
 /* ---------- exhibition mode ----------
-   no touch for IDLE_MS → dissolve back to Home (same as HIN),
-   and the demo data (알림 읽음·삭제, 영상, 녹화 상태) returns to its first state */
-const IDLE_MS = 60000;
+   nobody touching → the app plays by itself (attract tour, loops).
+   first touch     → the tour stops right where it is (that touch is swallowed) and the visitor takes over.
+   no touch for IDLE_MS → back to Home, demo data reset, and the tour starts again. */
+const IDLE_MS = 60000;          // visitor walked away
+const FIRST_IDLE_MS = 8000;     // right after opening the page
 const ST_INIT = JSON.stringify(ST);
 function resetState() {
   const o = JSON.parse(ST_INIT);
@@ -1673,20 +1675,71 @@ function resetState() {
   }
   refreshBadges();
 }
+
+// [screen, dissolve ms, ease, isBack, how long to stay]  ·  {wait:'s6', stay} waits for the app's own auto-flow
+const TOUR = [
+  ['s1',   NAV_DUR, EASE.slow, true,  5000],
+  ['s126', NAV_DUR, EASE.slow, false, 5500],   // Scan · radar
+  ['s120', 400,     EASE.io,   false, 6000],   // Record · live
+  ['s1',   400,     EASE.io,   true,  2500],
+  ['s127', NAV_DUR, EASE.slow, false, 4500],   // Level
+  ['s123', 400,     EASE.io,   false, 4500],   // Calendar
+  ['s1',   400,     EASE.io,   true,  2500],
+  ['s128', 400,     EASE.io,   false, 4500],   // Notifications
+  ['s1',   400,     EASE.io,   true,  2500],
+  ['s4',   400,     EASE.io,   false, 0],      // SOS countdown → sending → received (runs on its own)
+  { wait: 's6', stay: 6500 },
+];
+let touring = false, tourT = null, tourI = 0, swallowUntil = 0;
+function tourStep() {
+  if (!touring) return;
+  const st = TOUR[tourI];
+  if (!Array.isArray(st)) {                       // wait for the auto-flow to reach a screen
+    if (!current || current.id !== st.wait) { tourT = setTimeout(tourStep, 300); return; }
+    tourI = (tourI + 1) % TOUR.length;
+    tourT = setTimeout(tourStep, st.stay); return;
+  }
+  const [id, dur, ease, isBack, stay] = st;
+  if (busy) { tourT = setTimeout(tourStep, 200); return; }
+  if (tourI === 0) resetState();
+  if (!current || current.id !== id) go(id, dur, ease, isBack);
+  tourI = (tourI + 1) % TOUR.length;
+  tourT = setTimeout(tourStep, dur + stay);
+}
+function startTour() {
+  if (touring) return;
+  closeSheet(true); hideToast(); closeCall(true);
+  touring = true; tourI = 0; tourStep();
+}
+function stopTour() { touring = false; clearTimeout(tourT); }
+
 let idleTimer = null;
-function armIdle() {
+function armIdle(ms = IDLE_MS) {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(() => {
     if (current && current.id !== 's1') {
       closeSheet(true); hideToast(); closeCall(true);
       go('s1', NAV_DUR, EASE.slow, true);
-      setTimeout(resetState, NAV_DUR + 60);   // after the dissolve, so the leaving screen doesn't jump
-    }
-    armIdle();
-  }, IDLE_MS);
+      setTimeout(() => { resetState(); if (!touring) idleTimer = setTimeout(startTour, 4000); }, NAV_DUR + 60);
+    } else startTour();
+  }, ms);
 }
-['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev => window.addEventListener(ev, armIdle, { passive: true, capture: true }));
-armIdle();
+function onTouch(e) {
+  if (touring) {                       // first touch only wakes the app up — it doesn't press anything
+    stopTour();
+    swallowUntil = performance.now() + 700;
+    if (e.cancelable && e.type !== 'keydown') e.preventDefault();
+    e.stopPropagation();
+  } else if (performance.now() < swallowUntil && e.type !== 'keydown') {
+    e.stopPropagation();
+  }
+  armIdle();
+}
+['pointerdown', 'touchstart', 'mousedown', 'keydown', 'wheel'].forEach(ev => window.addEventListener(ev, onTouch, { passive: false, capture: true }));
+['click', 'pointerup', 'touchend', 'mouseup'].forEach(ev => window.addEventListener(ev, e => {
+  if (performance.now() < swallowUntil) { e.stopPropagation(); if (e.cancelable) e.preventDefault(); }
+}, { capture: true }));
+armIdle(FIRST_IDLE_MS);
 
 const BOOT_IMGS = ['s2', 'l2_vector', 'l2_scanning', 'r_dots', 's3', 's1', 's1_bgpatch', 's1_product'];
 Promise.race([
