@@ -1664,7 +1664,7 @@ window.addEventListener('keydown', e => {
    nobody touching → the app plays by itself (attract tour, loops).
    first touch     → the tour stops right where it is (that touch is swallowed) and the visitor takes over.
    no touch for IDLE_MS → back to Home, demo data reset, and the tour starts again. */
-const IDLE_MS = 60000;          // visitor walked away
+const IDLE_MS = 30000;          // visitor walked away
 const FIRST_IDLE_MS = 8000;     // right after opening the page
 const ST_INIT = JSON.stringify(ST);
 function resetState() {
