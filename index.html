@@ -1677,18 +1677,20 @@ function resetState() {
 }
 
 // [screen, dissolve ms, ease, isBack, how long to stay]  ·  {wait:'s6', stay} waits for the app's own auto-flow
+const SOS = [['s4', 400, EASE.io, false, 0], { wait: 's6', stay: 6500 }];   // countdown → sending → received (runs on its own)
+const HOME = (stay = 2500) => ['s1', NAV_DUR, EASE.slow, true, stay];
 const TOUR = [
-  ['s1',   NAV_DUR, EASE.slow, true,  5000],
+  HOME(5000),
   ['s126', NAV_DUR, EASE.slow, false, 5500],   // Scan · radar
   ['s120', 400,     EASE.io,   false, 6000],   // Record · live
-  ['s1',   400,     EASE.io,   true,  2500],
+  HOME(), ...SOS,                              // SOS 1
+  HOME(),
   ['s127', NAV_DUR, EASE.slow, false, 4500],   // Level
   ['s123', 400,     EASE.io,   false, 4500],   // Calendar
-  ['s1',   400,     EASE.io,   true,  2500],
+  HOME(), ...SOS,                              // SOS 2
+  HOME(),
   ['s128', 400,     EASE.io,   false, 4500],   // Notifications
-  ['s1',   400,     EASE.io,   true,  2500],
-  ['s4',   400,     EASE.io,   false, 0],      // SOS countdown → sending → received (runs on its own)
-  { wait: 's6', stay: 6500 },
+  HOME(), ...SOS,                              // SOS 3 → loops back to Home
 ];
 let touring = false, tourT = null, tourI = 0, swallowUntil = 0;
 function tourStep() {
